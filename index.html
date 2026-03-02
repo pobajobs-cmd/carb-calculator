@@ -4,11 +4,29 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Carb Calculator</title>
-
 <style>
+:root {
+  --bg: #f4f6f8;
+  --card: #fff;
+  --text: #111;
+  --input-bg: #fff;
+  --button-bg: #0077ff;
+  --button-text: #fff;
+}
+
+body.dark {
+  --bg: #121212;
+  --card: #1e1e1e;
+  --text: #eee;
+  --input-bg: #222;
+  --button-bg: #2196f3;
+  --button-text: #fff;
+}
+
 body {
   font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-  background: #f4f6f8;
+  background: var(--bg);
+  color: var(--text);
   margin: 0;
   padding: 1rem;
 }
@@ -23,7 +41,7 @@ h1 {
 }
 
 .card {
-  background: white;
+  background: var(--card);
   padding: 1rem;
   border-radius: 12px;
   margin-bottom: 1rem;
@@ -39,11 +57,17 @@ h1 {
   border-bottom: 1px solid #eee;
 }
 
+body.dark .ingredient {
+  border-bottom-color: #333;
+}
+
 input {
   padding: 0.5rem;
   font-size: 1rem;
   border-radius: 8px;
   border: 1px solid #ccc;
+  background: var(--input-bg);
+  color: var(--text);
 }
 
 button {
@@ -51,8 +75,9 @@ button {
   font-size: 1rem;
   border-radius: 8px;
   border: none;
-  background: #0077ff;
-  color: white;
+  background: var(--button-bg);
+  color: var(--button-text);
+  cursor: pointer;
 }
 
 button.remove {
@@ -63,12 +88,17 @@ button.remove {
   font-weight: bold;
   margin-top: 0.5rem;
 }
+
+.toggle-dark {
+  display: block;
+  margin: 0 auto 1rem;
+}
 </style>
 </head>
 <body>
-
 <div class="container">
   <h1>Carb Calculator</h1>
+  <button class="toggle-dark" onclick="toggleDarkMode()">Toggle Dark Mode</button>
 
   <div class="card">
     <h2>Ingredients</h2>
@@ -78,7 +108,6 @@ button.remove {
 
   <div class="card">
     <h2>Totals</h2>
-
     <div>Total Carbs: <span id="totalCarbs">0</span> g</div>
     <div>Total Weight: <span id="totalWeight">0</span> g</div>
     <div>Carbs per 100g: <span id="per100">0</span> g</div>
@@ -95,24 +124,38 @@ button.remove {
 </div>
 
 <script>
-function addIngredient() {
+/* ------------------ Dark Mode ------------------ */
+function toggleDarkMode() {
+  document.body.classList.toggle('dark');
+  localStorage.setItem('darkMode', document.body.classList.contains('dark'));
+}
+
+// Load dark mode preference
+if(localStorage.getItem('darkMode') === 'true') {
+  document.body.classList.add('dark');
+}
+
+/* ------------------ Ingredients ------------------ */
+function addIngredient(data = {}) {
   const container = document.getElementById("ingredients");
 
   const div = document.createElement("div");
   div.className = "ingredient";
 
   div.innerHTML = `
-    <input type="text" placeholder="Ingredient name">
-    <input type="number" placeholder="Carbs amount" class="carbs" oninput="calculate()">
-    <input type="number" placeholder="Per (g)" class="refWeight" oninput="calculate()">
-    <input type="number" placeholder="Ingredient weight (g)" class="weight" oninput="calculate()">
+    <input type="text" placeholder="Ingredient name" value="${data.name || ''}">
+    <input type="number" placeholder="Carbs amount" class="carbs" value="${data.carbs || ''}" oninput="calculate()">
+    <input type="number" placeholder="Per (g)" class="refWeight" value="${data.refWeight || ''}" oninput="calculate()">
+    <input type="number" placeholder="Ingredient weight (g)" class="weight" value="${data.weight || ''}" oninput="calculate()">
     <div>Ingredient Carbs: <span class="ingredientTotal">0</span> g</div>
     <button class="remove" onclick="this.parentElement.remove(); calculate()">Remove</button>
   `;
 
   container.appendChild(div);
+  calculate();
 }
 
+/* ------------------ Calculate ------------------ */
 function calculate() {
   let totalCarbs = 0;
   let totalWeight = 0;
@@ -125,30 +168,48 @@ function calculate() {
     const weight = parseFloat(ing.querySelector(".weight").value) || 0;
 
     let ingredientCarbs = 0;
-
-    if (ref > 0) {
-      ingredientCarbs = (carbs / ref) * weight;
-    }
+    if (ref > 0) ingredientCarbs = (carbs / ref) * weight;
 
     ing.querySelector(".ingredientTotal").innerText = ingredientCarbs.toFixed(2);
-
     totalCarbs += ingredientCarbs;
     totalWeight += weight;
   });
 
   document.getElementById("totalCarbs").innerText = totalCarbs.toFixed(2);
   document.getElementById("totalWeight").innerText = totalWeight.toFixed(2);
-
-  const per100 = totalWeight > 0 ? (totalCarbs / totalWeight) * 100 : 0;
-  document.getElementById("per100").innerText = per100.toFixed(2);
+  document.getElementById("per100").innerText = totalWeight ? ((totalCarbs / totalWeight) * 100).toFixed(2) : 0;
 
   const servings = parseFloat(document.getElementById("servings").value) || 1;
-  const perServing = totalCarbs / servings;
-  document.getElementById("perServing").innerText = perServing.toFixed(2);
+  document.getElementById("perServing").innerText = (totalCarbs / servings).toFixed(2);
+
+  // Save to localStorage
+  saveState();
 }
 
-addIngredient();
-</script>
+/* ------------------ Persistence ------------------ */
+function saveState() {
+  const ingredients = [];
+  document.querySelectorAll(".ingredient").forEach(ing => {
+    ingredients.push({
+      name: ing.querySelector("input[type=text]").value,
+      carbs: ing.querySelector(".carbs").value,
+      refWeight: ing.querySelector(".refWeight").value,
+      weight: ing.querySelector(".weight").value
+    });
+  });
+  localStorage.setItem('recipeData', JSON.stringify({
+    ingredients,
+    servings: document.getElementById("servings").value
+  }));
+}
 
+function loadState() {
+  const data = JSON.parse(localStorage.getItem('recipeData') || '{}');
+  if(data.ingredients) data.ingredients.forEach(addIngredient);
+  if(data.servings) document.getElementById("servings").value = data.servings;
+}
+
+loadState();
+</script>
 </body>
 </html>
