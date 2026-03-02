@@ -49,11 +49,9 @@ h1 {
 }
 
 .ingredient {
+  padding: 0.5rem 0;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
-  margin-bottom: 1rem;
-  padding-bottom: 1rem;
   border-bottom: 1px solid #eee;
 }
 
@@ -61,23 +59,36 @@ body.dark .ingredient {
   border-bottom-color: #333;
 }
 
+.ingredient-line {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.ingredient-line span {
+  flex: 1;
+  margin-right: 0.5rem;
+}
+
 input {
-  padding: 0.5rem;
-  font-size: 1rem;
-  border-radius: 8px;
+  padding: 0.3rem;
+  font-size: 0.9rem;
+  border-radius: 6px;
   border: 1px solid #ccc;
   background: var(--input-bg);
   color: var(--text);
+  margin-bottom: 0.3rem;
 }
 
 button {
-  padding: 0.7rem;
-  font-size: 1rem;
-  border-radius: 8px;
+  padding: 0.5rem;
+  font-size: 0.9rem;
+  border-radius: 6px;
   border: none;
   background: var(--button-bg);
   color: var(--button-text);
   cursor: pointer;
+  margin-left: 0.3rem;
 }
 
 button.remove {
@@ -127,32 +138,65 @@ button.remove {
 /* ------------------ Dark Mode ------------------ */
 function toggleDarkMode() {
   document.body.classList.toggle('dark');
-  localStorage.setItem('darkMode', document.body.classList.contains('dark'));
-}
-
-// Load dark mode preference
-if(localStorage.getItem('darkMode') === 'true') {
-  document.body.classList.add('dark');
 }
 
 /* ------------------ Ingredients ------------------ */
-function addIngredient(data = {}) {
+function addIngredient() {
   const container = document.getElementById("ingredients");
-
   const div = document.createElement("div");
   div.className = "ingredient";
 
-  div.innerHTML = `
-    <input type="text" placeholder="Ingredient name" value="${data.name || ''}">
-    <input type="number" placeholder="Carbs amount" class="carbs" value="${data.carbs || ''}" oninput="calculate()">
-    <input type="number" placeholder="Per (g)" class="refWeight" value="${data.refWeight || ''}" oninput="calculate()">
-    <input type="number" placeholder="Ingredient weight (g)" class="weight" value="${data.weight || ''}" oninput="calculate()">
-    <div>Ingredient Carbs: <span class="ingredientTotal">0</span> g</div>
-    <button class="remove" onclick="this.parentElement.remove(); calculate()">Remove</button>
-  `;
+  // Start in edit mode
+  div.innerHTML = ingredientEditHTML({}, true);
 
   container.appendChild(div);
   calculate();
+}
+
+function ingredientEditHTML(data = {}, editMode = true) {
+  if(editMode) {
+    return `
+      <input type="text" placeholder="Ingredient name" value="${data.name || ''}">
+      <input type="number" placeholder="Carbs amount" class="carbs" value="${data.carbs || ''}" oninput="calculate()">
+      <input type="number" placeholder="Per (g)" class="refWeight" value="${data.refWeight || ''}" oninput="calculate()">
+      <input type="number" placeholder="Ingredient weight (g)" class="weight" value="${data.weight || ''}" oninput="calculate()">
+      <button onclick="saveIngredient(this)">Save</button>
+      <button class="remove" onclick="this.parentElement.remove(); calculate()">Remove</button>
+    `;
+  } else {
+    const totalCarbs = data.refWeight > 0 ? ((data.carbs / data.refWeight) * data.weight).toFixed(2) : '0.00';
+    return `
+      <div class="ingredient-line">
+        <span>${data.name || ''} — ${data.carbs || 0}g / ${data.refWeight || 0}g — ${data.weight || 0}g — ${totalCarbs}g total</span>
+        <button onclick="editIngredient(this)">Edit</button>
+        <button class="remove" onclick="this.parentElement.parentElement.remove(); calculate()">Remove</button>
+      </div>
+    `;
+  }
+}
+
+function saveIngredient(button) {
+  const parent = button.parentElement;
+  const data = {
+    name: parent.querySelector('input[type=text]').value,
+    carbs: parseFloat(parent.querySelector('.carbs').value) || 0,
+    refWeight: parseFloat(parent.querySelector('.refWeight').value) || 0,
+    weight: parseFloat(parent.querySelector('.weight').value) || 0
+  };
+  parent.innerHTML = ingredientEditHTML(data, false);
+  calculate();
+}
+
+function editIngredient(button) {
+  const parent = button.parentElement.parentElement;
+  const parts = parent.querySelector('span').innerText.split(' — ');
+  const data = {
+    name: parts[0],
+    carbs: parseFloat(parts[1]),
+    refWeight: parseFloat(parts[2]),
+    weight: parseFloat(parts[3]),
+  };
+  parent.innerHTML = ingredientEditHTML(data, true);
 }
 
 /* ------------------ Calculate ------------------ */
@@ -160,19 +204,22 @@ function calculate() {
   let totalCarbs = 0;
   let totalWeight = 0;
 
-  const ingredients = document.querySelectorAll(".ingredient");
-
-  ingredients.forEach(ing => {
-    const carbs = parseFloat(ing.querySelector(".carbs").value) || 0;
-    const ref = parseFloat(ing.querySelector(".refWeight").value) || 0;
-    const weight = parseFloat(ing.querySelector(".weight").value) || 0;
-
-    let ingredientCarbs = 0;
-    if (ref > 0) ingredientCarbs = (carbs / ref) * weight;
-
-    ing.querySelector(".ingredientTotal").innerText = ingredientCarbs.toFixed(2);
-    totalCarbs += ingredientCarbs;
-    totalWeight += weight;
+  document.querySelectorAll(".ingredient").forEach(ing => {
+    const inputs = ing.querySelectorAll("input");
+    if(inputs.length === 0) { // compact view
+      const parts = ing.querySelector('span').innerText.split(' — ');
+      const carbs = parseFloat(parts[1]) || 0;
+      const refWeight = parseFloat(parts[2]) || 0;
+      const weight = parseFloat(parts[3]) || 0;
+      if(refWeight > 0) totalCarbs += (carbs / refWeight) * weight;
+      totalWeight += weight;
+    } else { // still editing, don't count yet
+      const carbs = parseFloat(ing.querySelector('.carbs').value) || 0;
+      const refWeight = parseFloat(ing.querySelector('.refWeight').value) || 0;
+      const weight = parseFloat(ing.querySelector('.weight').value) || 0;
+      if(refWeight > 0) totalCarbs += (carbs / refWeight) * weight;
+      totalWeight += weight;
+    }
   });
 
   document.getElementById("totalCarbs").innerText = totalCarbs.toFixed(2);
@@ -181,35 +228,7 @@ function calculate() {
 
   const servings = parseFloat(document.getElementById("servings").value) || 1;
   document.getElementById("perServing").innerText = (totalCarbs / servings).toFixed(2);
-
-  // Save to localStorage
-  saveState();
 }
-
-/* ------------------ Persistence ------------------ */
-function saveState() {
-  const ingredients = [];
-  document.querySelectorAll(".ingredient").forEach(ing => {
-    ingredients.push({
-      name: ing.querySelector("input[type=text]").value,
-      carbs: ing.querySelector(".carbs").value,
-      refWeight: ing.querySelector(".refWeight").value,
-      weight: ing.querySelector(".weight").value
-    });
-  });
-  localStorage.setItem('recipeData', JSON.stringify({
-    ingredients,
-    servings: document.getElementById("servings").value
-  }));
-}
-
-function loadState() {
-  const data = JSON.parse(localStorage.getItem('recipeData') || '{}');
-  if(data.ingredients) data.ingredients.forEach(addIngredient);
-  if(data.servings) document.getElementById("servings").value = data.servings;
-}
-
-loadState();
 </script>
 </body>
 </html>
