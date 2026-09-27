@@ -3,17 +3,11 @@ START HERE
 
 What's in this folder:
 
-  index.html                    → the homepage (About section + latest post)
-  calendar/index.html           → the family calendar, its own page
+  index.html                    → the homepage
   archive/index.html            → the "all posts" page
   assets/journal.js             → makes the homepage find posts automatically
   journal/2026-09-21/index.html → one example post, already filled in
   post-template.html            → copy this each time you write a new post
-
-New this time: the calendar's "Export CSV" button now uses a normal
-browser download (it previously relied on something only available
-inside Claude's preview) — on your real site it'll just download
-the file straight to your device, no extra setup needed.
 
 
 HOW TO PUT THIS ON YOUR SITE (GitHub web upload — no software needed)

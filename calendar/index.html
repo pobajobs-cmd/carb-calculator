@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Kylo's Calendar — experiment</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;1,9..144,500&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    box-sizing: border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    --paper: #EDF1F3; --paper-tint: #E1E8EB; --card: #F8FBFC;
+    --ink: #202B33; --ink-soft: #58666F; --line: #C9D6DB;
+    --pump: #C0453D; --sensor: #D3A227; --transmitter: #4F8C5B; --pen: #3E6E88; --other: #8B5FA3;
+    --font-display: 'Fraunces', Georgia, serif;
+    --font-body: 'Work Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #16212A; --paper-tint: #1D2B35; --card: #1B2830;
+      --ink: #E7EEF1; --ink-soft: #A8B8C0; --line: #2E3F49;
+      --pump: #D97A73; --sensor: #E0BC5E; --transmitter: #83B08C; --pen: #7FAFC7; --other: #B190C4;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #16212A; --paper-tint: #1D2B35; --card: #1B2830;
+    --ink: #E7EEF1; --ink-soft: #A8B8C0; --line: #2E3F49;
+    --pump: #D97A73; --sensor: #E0BC5E; --transmitter: #83B08C; --pen: #7FAFC7; --other: #B190C4;
+  }
+  html, body { height: 100%; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--paper); color: var(--ink);
+    font-family: var(--font-body); font-size: 16px; line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+  .banner {
+    background: var(--pen); color: var(--card); text-align: center;
+    font-size: 0.85rem; padding: 0.6rem 1rem; padding-top: calc(0.6rem + env(safe-area-inset-top, 0px));
+  }
+  .wrap { max-width: 640px; margin: 0 auto; padding: 1.75rem 1.5rem 3rem; }
+  .site-nav { display: flex; justify-content: space-between; align-items: center; padding: 0 0 1rem; }
+  .site-nav .brand { font-family: var(--font-display); font-weight: 500; font-size: 1.1rem; text-decoration: none; color: var(--ink); }
+  .site-nav nav a { text-decoration: none; font-size: 0.88rem; font-weight: 600; color: var(--ink-soft); }
+  .site-nav nav a:hover { color: var(--ink); }
+  h1 { font-family: var(--font-display); font-weight: 500; font-size: 1.5rem; margin: 0 0 0.4rem; }
+  .sub { color: var(--ink-soft); font-size: 0.92rem; margin: 0 0 1.5rem; }
+
+  .cal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.9rem; }
+  .cal-title { font-family: var(--font-display); font-weight: 500; font-size: 1.2rem; }
+  .cal-nav { display: flex; gap: 0.5rem; }
+  .cal-nav button {
+    width: 34px; height: 34px; border-radius: 50%; border: 1px solid var(--line);
+    background: var(--card); color: var(--ink); font-size: 1rem; cursor: pointer;
+  }
+  .cal-nav button:hover { border-color: var(--pen); }
+
+  .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px;
+    background: var(--line); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+  .cal-dow { background: var(--paper-tint); text-align: center; font-size: 0.7rem; font-weight: 600;
+    color: var(--ink-soft); padding: 0.45rem 0.1rem; }
+  .cal-day { background: var(--card); min-height: 58px; padding: 0.3rem; display: flex; flex-direction: column;
+    gap: 0.2rem; cursor: pointer; border: none; text-align: left; font: inherit; color: inherit; }
+  .cal-day:hover { background: var(--paper-tint); }
+  .cal-day.empty { background: var(--paper); cursor: default; }
+  .cal-day.empty:hover { background: var(--paper); }
+  .cal-day .num { font-size: 0.75rem; color: var(--ink-soft); }
+  .cal-day.today .num { display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px;
+    border-radius: 50%; background: var(--pen); color: var(--card); font-weight: 700; }
+  .cal-dots { display: flex; gap: 3px; flex-wrap: wrap; margin-top: auto; }
+  .cal-dot { width: 8px; height: 8px; border-radius: 50%; }
+  .cal-dot.forecast { background: transparent; border: 1.5px solid currentColor; }
+  .cal-dot.superseded { background: transparent; border: 1.5px dashed var(--ink-soft); opacity: 0.6; }
+
+  .legend { display: flex; flex-wrap: wrap; gap: 0.9rem; margin: 1.1rem 0 0.3rem; font-size: 0.78rem; color: var(--ink-soft); }
+  .legend .item { display: flex; align-items: center; gap: 0.35rem; }
+  .legend .swatch { width: 9px; height: 9px; border-radius: 50%; }
+  .legend-key { font-size: 0.75rem; color: var(--ink-soft); margin-top: 0.3rem; }
+
+  .overview { margin-top: 2rem; }
+  .overview h2 { font-family: var(--font-display); font-weight: 500; font-size: 1.1rem; margin: 0 0 0.8rem; }
+  .device-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.9rem; }
+  .device-card { background: var(--card); border: 1px solid var(--line); border-radius: 8px;
+    padding: 1rem 1.1rem; border-left: 4px solid var(--dc, var(--pen)); }
+  .device-card h4 { font-family: var(--font-display); font-weight: 500; font-size: 0.98rem; margin: 0 0 0.35rem; }
+  .device-card .due { font-size: 0.83rem; color: var(--ink-soft); }
+  .device-card .due strong { color: var(--ink); }
+  .device-card .badge { display: inline-block; margin-top: 0.4rem; font-size: 0.75rem; font-weight: 700;
+    padding: 0.2rem 0.55rem; border-radius: 20px; background: color-mix(in srgb, var(--dc) 18%, transparent); color: var(--dc); }
+
+  /* ---------- Modal ---------- */
+  .overlay { position: fixed; inset: 0; background: rgba(20,25,30,0.45); display: none;
+    align-items: flex-end; justify-content: center; z-index: 50; }
+  .overlay.open { display: flex; }
+  .modal { background: var(--paper); width: 100%; max-width: 480px; border-radius: 16px 16px 0 0;
+    padding: 1.5rem 1.5rem calc(1.5rem + env(safe-area-inset-bottom, 0px)); max-height: 85vh; overflow-y: auto; }
+  @media (min-width: 600px) {
+    .overlay { align-items: center; }
+    .modal { border-radius: 14px; }
+  }
+  .modal-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.9rem; }
+  .modal-head h3 { font-family: var(--font-display); font-weight: 500; font-size: 1.15rem; margin: 0; }
+  .modal-close { border: none; background: none; font-size: 1.3rem; color: var(--ink-soft); cursor: pointer; line-height: 1; padding: 0.2rem; }
+
+  .section-label { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em;
+    color: var(--ink-soft); margin: 1rem 0 0.5rem; }
+  .section-label:first-child { margin-top: 0; }
+
+  .detail-card { border-radius: 10px; border: 1px solid var(--line); background: var(--card);
+    padding: 0.7rem 0.85rem; margin-bottom: 0.5rem; }
+  .detail-card.ghost { opacity: 0.65; border-style: dashed; }
+  .detail-top { display: flex; align-items: center; justify-content: space-between; }
+  .detail-top .lbl { display: flex; align-items: center; font-size: 0.9rem; font-weight: 600; }
+  .detail-top .dot { width: 9px; height: 9px; border-radius: 50%; margin-right: 0.5rem; display: inline-block; flex-shrink: 0; }
+  .detail-top .dot.ring { background: transparent; border: 1.5px solid currentColor; }
+  .detail-top button.del { border: none; background: none; color: var(--ink-soft); cursor: pointer; font-size: 1rem; }
+  .detail-sub { font-size: 0.8rem; color: var(--ink-soft); margin-top: 0.25rem; }
+  .detail-note { font-size: 0.82rem; color: var(--ink); margin-top: 0.35rem; background: var(--paper-tint);
+    border-radius: 6px; padding: 0.4rem 0.55rem; }
+  .detail-note b { font-weight: 600; }
+
+  .type-btn { display: flex; align-items: center; gap: 0.7rem; width: 100%; text-align: left;
+    padding: 0.75rem 0.9rem; border-radius: 10px; border: 1px solid var(--line); background: var(--card);
+    font: inherit; color: var(--ink); cursor: pointer; margin-bottom: 0.5rem; }
+  .type-btn:hover { border-color: var(--dc); }
+  .type-btn .dot { width: 13px; height: 13px; border-radius: 50%; background: var(--dc); flex-shrink: 0; }
+  .type-btn .txt { flex: 1; }
+  .type-btn .txt strong { display: block; font-size: 0.92rem; }
+  .type-btn .txt small { color: var(--ink-soft); font-size: 0.78rem; }
+
+  .add-form { border: 1px solid var(--line); border-radius: 10px; padding: 0.9rem; margin-top: 0.4rem; display: none; }
+  .add-form.open { display: block; }
+  .add-form label { display: block; font-size: 0.82rem; font-weight: 600; margin: 0.6rem 0 0.3rem; }
+  .add-form label:first-child { margin-top: 0; }
+  .add-form input[type="text"], .add-form input[type="number"], .add-form textarea {
+    width: 100%; padding: 0.55rem 0.7rem; border-radius: 6px; border: 1px solid var(--line);
+    background: var(--paper); color: var(--ink); font: inherit; font-size: 0.9rem; resize: vertical;
+  }
+  .add-form .hint { font-size: 0.76rem; color: var(--ink-soft); margin-top: 0.2rem; }
+  .add-form .early-note { font-size: 0.8rem; color: var(--ink); background: var(--paper-tint);
+    border-radius: 6px; padding: 0.5rem 0.6rem; margin-top: 0.5rem; }
+  .add-form .repeat-row { display: flex; align-items: center; gap: 0.5rem; margin-top: 0.6rem; }
+  .add-form .repeat-row input[type="checkbox"] { width: 16px; height: 16px; }
+  .add-form .repeat-days { display: none; margin-top: 0.5rem; }
+  .add-form .repeat-days.show { display: block; }
+  .add-save {
+    margin-top: 0.9rem; width: 100%; padding: 0.65rem; border-radius: 8px; border: none;
+    background: var(--dc, var(--other)); color: var(--card); font-weight: 600; font-size: 0.9rem; cursor: pointer;
+  }
+
+  .type-toggles { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1rem; }
+  .type-toggle {
+    display: flex; align-items: center; gap: 0.4rem; font-size: 0.85rem;
+    padding: 0.35rem 0.7rem 0.35rem 0.55rem; border: 1px solid var(--line); border-radius: 20px;
+    cursor: pointer; user-select: none; background: var(--card); color: var(--ink-soft);
+  }
+  .type-toggle:has(input:checked) { color: var(--ink); border-color: var(--tc, var(--line)); }
+  .type-toggle input { width: 14px; height: 14px; accent-color: var(--tc, var(--pen)); }
+  .type-toggle .dot { width: 8px; height: 8px; border-radius: 50%; }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header class="site-nav">
+    <a class="brand" href="/">Kylo's Journey</a>
+    <nav><a href="/archive/">All posts</a></nav>
+  </header>
+
+  <h1>Family calendar</h1>
+  <p class="sub">Tap a day to see what's logged or forecast there, and to add a new change.</p>
+
+  <div class="cal-head">
+    <span class="cal-title" id="calTitle"></span>
+    <div class="cal-nav">
+      <button id="calPrev" aria-label="Previous month">‹</button>
+      <button id="calNext" aria-label="Next month">›</button>
+    </div>
+  </div>
+  <div class="cal-grid" id="calGrid"></div>
+
+  <div class="legend" id="legend"></div>
+  <p class="legend-key">● logged &nbsp; ○ forecast &nbsp; ⊘ superseded forecast</p>
+
+  <div class="overview">
+    <h2>Next changes</h2>
+    <div class="device-grid" id="deviceGrid"></div>
+  </div>
+
+  <div class="overview" id="exportSection">
+    <h2>Export</h2>
+    <p class="sub" style="margin-bottom:0.8rem;">Export logged changes from the last however-many days — handy for a resupply report.</p>
+    <div class="type-toggles" id="exportTypeToggles"></div>
+    <div style="display:flex; gap:0.6rem; align-items:center; flex-wrap:wrap;">
+      <input type="number" id="exportDays" min="1" value="30" style="width:80px; padding:0.5rem 0.6rem; border-radius:6px; border:1px solid var(--line); background:var(--card); color:var(--ink); font:inherit;">
+      <span style="color:var(--ink-soft); font-size:0.88rem;">days</span>
+      <button id="exportBtn" style="padding:0.55rem 1rem; border-radius:8px; border:none; background:var(--pen); color:var(--card); font-weight:600; cursor:pointer;" disabled>Export CSV</button>
+    </div>
+    <p class="legend-key" id="exportStatus" style="margin-top:0.5rem;"></p>
+  </div>
+</div>
+
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <div class="modal-head">
+      <h3 id="modalDate">Day</h3>
+      <button class="modal-close" id="modalClose" aria-label="Close">×</button>
+    </div>
+    <div id="existingWrap"></div>
+    <div class="section-label">Log a new change</div>
+    <div id="typeButtons"></div>
+    <div class="add-form" id="addForm"></div>
+  </div>
+</div>
+
+<script>
+  const TYPES = {
+    pump:        { label: 'Pump change',        color: 'var(--pump)',        interval: 3 },
+    sensor:      { label: 'Sensor change',       color: 'var(--sensor)',      interval: 10 },
+    transmitter: { label: 'Transmitter change',  color: 'var(--transmitter)', interval: 90 },
+    pen:         { label: 'Pen (insulin) change',color: 'var(--pen)',         interval: 30 },
+  };
+
+  // Local-calendar-date string, deliberately NOT toISOString (which shifts by a day near midnight
+  // once timezone offset is applied) — this was the source of the off-by-one forecast bug.
+  function toStr(d) {
+    const y = d.getFullYear(), m = String(d.getMonth() + 1).padStart(2, '0'), day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  }
+  function fromStr(s) { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d); }
+  function addDays(dateStrOrDate, n) {
+    const d = typeof dateStrOrDate === 'string' ? fromStr(dateStrOrDate) : new Date(dateStrOrDate);
+    d.setDate(d.getDate() + n);
+    return d;
+  }
+  function fmtShort(d) { return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }); }
+  function fmtFull(d) { return d.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' }); }
+
+  const today = new Date(); today.setHours(0,0,0,0);
+
+  // ---- State + persistence (per-device only, this browser) ----
+  let entries = [];
+  function seed() {
+    entries = [
+      { id: 'seed-1', type: 'pump',        date: toStr(addDays(today, -1)),  notes: '' },
+      { id: 'seed-2', type: 'sensor',      date: toStr(addDays(today, -4)),  notes: '' },
+      { id: 'seed-3', type: 'transmitter', date: toStr(addDays(today, -27)), notes: '' },
+      { id: 'seed-4', type: 'pen',         date: toStr(addDays(today, -9)),  notes: '' },
+    ];
+  }
+  try {
+    const raw = localStorage.getItem('kylo-calendar-entries-demo-v2');
+    entries = raw ? JSON.parse(raw) : (seed(), entries);
+  } catch (e) { seed(); }
+
+  function save() {
+    try { localStorage.setItem('kylo-calendar-entries-demo-v2', JSON.stringify(entries)); } catch (e) {}
+  }
+  function entryById(id) { return entries.find(e => e.id === id); }
+
+  function addEntry(entry) {
+    entry.id = 'e' + Date.now() + Math.random().toString(36).slice(2,6);
+    entries.push(entry);
+    save(); renderAll();
+  }
+  function removeEntry(id) {
+    entries = entries.filter(e => e.id !== id);
+    save(); renderAll(); openModal(modalDateStr);
+  }
+
+  // ---- Build a date -> [event] map. Each event carries enough to render full detail. ----
+  function buildEventMap() {
+    const map = {};
+    const add = (dateStr, item) => { (map[dateStr] ||= []).push(item); };
+
+    Object.keys(TYPES).forEach(key => {
+      const cfg = TYPES[key];
+      const hist = entries.filter(e => e.type === key).sort((a,b) => a.date.localeCompare(b.date));
+      hist.forEach((entry, i) => {
+        add(entry.date, { kind: 'actual', type: key, color: cfg.color, label: cfg.label, entryId: entry.id });
+        const nextStr = toStr(addDays(entry.date, cfg.interval));
+        const supersededBy = i < hist.length - 1 ? hist[i + 1] : null;
+        add(nextStr, {
+          kind: supersededBy ? 'superseded' : 'forecast', type: key, color: cfg.color, label: cfg.label,
+          originEntryId: entry.id, supersededByDate: supersededBy ? supersededBy.date : null,
+        });
+      });
+    });
+
+    entries.filter(e => e.type === 'other').forEach(e => {
+      add(e.date, { kind: 'actual', type: 'other', color: 'var(--other)', label: e.label || 'Other', entryId: e.id });
+      if (e.repeat && e.repeatDays) {
+        add(toStr(addDays(e.date, e.repeatDays)), {
+          kind: 'forecast', type: 'other', color: 'var(--other)', label: (e.label || 'Other'),
+          originEntryId: e.id, supersededByDate: null,
+        });
+      }
+    });
+    return map;
+  }
+
+  // ---- Calendar rendering ----
+  let viewYear = today.getFullYear(), viewMonth = today.getMonth();
+  const calTitle = document.getElementById('calTitle');
+  const calGrid = document.getElementById('calGrid');
+  const dows = ['S','M','T','W','T','F','S'];
+
+  function renderCalendar() {
+    const map = buildEventMap();
+    calTitle.textContent = new Date(viewYear, viewMonth, 1).toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
+    calGrid.innerHTML = '';
+    dows.forEach(d => { const el = document.createElement('div'); el.className = 'cal-dow'; el.textContent = d; calGrid.appendChild(el); });
+
+    const firstDay = new Date(viewYear, viewMonth, 1).getDay();
+    const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
+    for (let i = 0; i < firstDay; i++) { const el = document.createElement('div'); el.className = 'cal-day empty'; calGrid.appendChild(el); }
+
+    for (let day = 1; day <= daysInMonth; day++) {
+      const date = new Date(viewYear, viewMonth, day);
+      const dateStr = toStr(date);
+      const el = document.createElement('button');
+      el.type = 'button';
+      el.className = 'cal-day' + (date.toDateString() === today.toDateString() ? ' today' : '');
+      el.addEventListener('click', () => openModal(dateStr));
+
+      const num = document.createElement('span'); num.className = 'num'; num.textContent = day;
+      el.appendChild(num);
+
+      const dayEvents = map[dateStr];
+      if (dayEvents) {
+        const dots = document.createElement('div'); dots.className = 'cal-dots';
+        dayEvents.forEach(ev => {
+          const dot = document.createElement('span');
+          dot.className = 'cal-dot' + (ev.kind === 'forecast' ? ' forecast' : ev.kind === 'superseded' ? ' superseded' : '');
+          if (ev.kind === 'actual') dot.style.background = ev.color;
+          if (ev.kind === 'forecast') dot.style.color = ev.color;
+          dots.appendChild(dot);
+        });
+        el.appendChild(dots);
+      }
+      calGrid.appendChild(el);
+    }
+  }
+
+  document.getElementById('calPrev').addEventListener('click', () => { viewMonth--; if (viewMonth < 0) { viewMonth = 11; viewYear--; } renderCalendar(); });
+  document.getElementById('calNext').addEventListener('click', () => { viewMonth++; if (viewMonth > 11) { viewMonth = 0; viewYear++; } renderCalendar(); });
+
+  // ---- Legend ----
+  function renderLegend() {
+    const legend = document.getElementById('legend');
+    legend.innerHTML = Object.values(TYPES).map(cfg =>
+      `<span class="item"><span class="swatch" style="background:${cfg.color}"></span>${cfg.label}</span>`
+    ).join('') + `<span class="item"><span class="swatch" style="background:var(--other)"></span>Other</span>`;
+  }
+
+  // ---- Overview cards ----
+  function renderOverview() {
+    const grid = document.getElementById('deviceGrid');
+    grid.innerHTML = '';
+    Object.keys(TYPES).forEach(key => {
+      const cfg = TYPES[key];
+      const hist = entries.filter(e => e.type === key).sort((a,b) => a.date.localeCompare(b.date));
+      const card = document.createElement('div');
+      card.className = 'device-card';
+      card.style.setProperty('--dc', cfg.color);
+      if (hist.length === 0) {
+        card.innerHTML = `<h4>${cfg.label}</h4><div class="due">Not logged yet — tap a day to add one.</div>`;
+      } else {
+        const last = fromStr(hist[hist.length - 1].date);
+        const next = addDays(last, cfg.interval);
+        const daysLeft = Math.round((next - today) / 86400000);
+        const badge = daysLeft < 0 ? `${Math.abs(daysLeft)}d overdue` : daysLeft === 0 ? 'Due today' : daysLeft === 1 ? 'Due tomorrow' : `${daysLeft} days left`;
+        card.innerHTML = `
+          <h4>${cfg.label}</h4>
+          <div class="due">Last: <strong>${fmtShort(last)}</strong> · Next: <strong>${fmtShort(next)}</strong></div>
+          <span class="badge">${badge}</span>
+        `;
+      }
+      grid.appendChild(card);
+    });
+  }
+
+  function renderAll() { renderCalendar(); renderOverview(); }
+
+  // ---- Modal ----
+  const overlay = document.getElementById('overlay');
+  const modalDate = document.getElementById('modalDate');
+  const existingWrap = document.getElementById('existingWrap');
+  const typeButtons = document.getElementById('typeButtons');
+  const addForm = document.getElementById('addForm');
+  let modalDateStr = null;
+
+  function detailCardHTML(ev) {
+    const ringClass = ev.kind === 'actual' ? '' : ' ring';
+    const ghost = ev.kind === 'superseded' ? ' ghost' : '';
+    let sub = '', note = '';
+
+    if (ev.kind === 'actual') {
+      const entry = entryById(ev.entryId);
+      sub = 'Logged ' + fmtFull(fromStr(entry.date));
+      if (entry.notes) note += `<div class="detail-note"><b>Notes:</b> ${entry.notes}</div>`;
+      if (entry.earlyReason) note += `<div class="detail-note"><b>Reason for early change:</b> ${entry.earlyReason}</div>`;
+    } else {
+      const origin = entryById(ev.originEntryId);
+      sub = origin ? 'Based on change logged ' + fmtShort(fromStr(origin.date)) : '';
+      if (ev.kind === 'superseded' && ev.supersededByDate) {
+        sub += ' · overtaken by a change on ' + fmtShort(fromStr(ev.supersededByDate));
+      } else if (ev.kind === 'forecast') {
+        const daysLeft = Math.round((fromStr(document.getElementById('modalDate').dataset.date || modalDateStr) - today) / 86400000);
+        sub += daysLeft === 0 ? ' · due today' : daysLeft > 0 ? ` · in ${daysLeft} days` : ` · ${Math.abs(daysLeft)} days overdue`;
+      }
+      if (origin && origin.notes) note += `<div class="detail-note"><b>Notes on original change:</b> ${origin.notes}</div>`;
+    }
+
+    const delBtn = ev.kind === 'actual'
+      ? `<button class="del" data-del="${ev.entryId}" aria-label="Remove">×</button>` : '';
+
+    return `
+      <div class="detail-card${ghost}">
+        <div class="detail-top">
+          <span class="lbl"><span class="dot${ringClass}" style="${ev.kind==='actual' ? 'background:'+ev.color : 'color:'+ev.color}"></span>${ev.label}${ev.kind==='forecast' ? ' — forecast' : ev.kind==='superseded' ? ' — old forecast' : ''}</span>
+          ${delBtn}
+        </div>
+        <div class="detail-sub">${sub}</div>
+        ${note}
+      </div>
+    `;
+  }
+
+  function openModal(dateStr) {
+    modalDateStr = dateStr;
+    modalDate.textContent = fmtFull(fromStr(dateStr));
+    modalDate.dataset.date = dateStr;
+    addForm.classList.remove('open');
+    addForm.innerHTML = '';
+
+    const map = buildEventMap();
+    const dayEvents = map[dateStr] || [];
+    existingWrap.innerHTML = '';
+    if (dayEvents.length) {
+      const label = document.createElement('div');
+      label.className = 'section-label';
+      label.textContent = 'On this day';
+      existingWrap.appendChild(label);
+      dayEvents.forEach(ev => {
+        const wrap = document.createElement('div');
+        wrap.innerHTML = detailCardHTML(ev);
+        existingWrap.appendChild(wrap.firstElementChild);
+      });
+      existingWrap.querySelectorAll('[data-del]').forEach(btn => {
+        btn.addEventListener('click', () => removeEntry(btn.dataset.del));
+      });
+    }
+
+    typeButtons.innerHTML = '';
+    Object.keys(TYPES).forEach(key => {
+      const cfg = TYPES[key];
+      const btn = document.createElement('button');
+      btn.type = 'button'; btn.className = 'type-btn'; btn.style.setProperty('--dc', cfg.color);
+      btn.innerHTML = `<span class="dot"></span><span class="txt"><strong>${cfg.label}</strong><small>Forecasts again in ${cfg.interval} days</small></span>`;
+      btn.addEventListener('click', () => openTypeForm(key));
+      typeButtons.appendChild(btn);
+    });
+    const otherBtn = document.createElement('button');
+    otherBtn.type = 'button'; otherBtn.className = 'type-btn'; otherBtn.style.setProperty('--dc', 'var(--other)');
+    otherBtn.innerHTML = `<span class="dot"></span><span class="txt"><strong>Other</strong><small>Hospital visit, blood test, anything else</small></span>`;
+    otherBtn.addEventListener('click', () => openOtherForm());
+    typeButtons.appendChild(otherBtn);
+
+    overlay.classList.add('open');
+  }
+  function closeModal() { overlay.classList.remove('open'); }
+
+  function openTypeForm(key) {
+    const cfg = TYPES[key];
+    const hist = entries.filter(e => e.type === key).sort((a,b) => a.date.localeCompare(b.date));
+    let isEarly = false, forecastDate = null;
+    if (hist.length) {
+      const last = hist[hist.length - 1];
+      forecastDate = addDays(last.date, cfg.interval);
+      isEarly = fromStr(modalDateStr) < forecastDate;
+    }
+
+    addForm.style.setProperty('--dc', cfg.color);
+    addForm.innerHTML = `
+      <label for="fNotes">Notes (optional)</label>
+      <input type="text" id="fNotes" placeholder="e.g. lot number, 4-digit code">
+      ${isEarly ? `
+        <div class="early-note">This is earlier than the forecast (was due ${fmtShort(forecastDate)}).</div>
+        <label for="fReason">Reason for changing early (optional)</label>
+        <input type="text" id="fReason" placeholder="e.g. site failure, adhesive lifted">
+      ` : ''}
+      <button class="add-save" id="fSave">Log ${cfg.label.toLowerCase()}</button>
+    `;
+    addForm.classList.add('open');
+    document.getElementById('fSave').addEventListener('click', () => {
+      const notes = document.getElementById('fNotes').value.trim();
+      const reasonEl = document.getElementById('fReason');
+      const earlyReason = reasonEl ? reasonEl.value.trim() : '';
+      addEntry({ type: key, date: modalDateStr, notes, earlyReason });
+      closeModal();
+    });
+  }
+
+  function openOtherForm() {
+    addForm.style.setProperty('--dc', 'var(--other)');
+    addForm.innerHTML = `
+      <label for="oLabel">What is it?</label>
+      <input type="text" id="oLabel" placeholder="e.g. Hospital visit, blood test">
+      <label for="oNotes">Notes (optional)</label>
+      <input type="text" id="oNotes" placeholder="Any extra detail">
+      <div class="repeat-row">
+        <input type="checkbox" id="oRepeat">
+        <label for="oRepeat" style="margin:0;">This repeats</label>
+      </div>
+      <div class="repeat-days" id="oRepeatWrap">
+        <label for="oInterval">Every how many days?</label>
+        <input type="number" id="oInterval" min="1" value="30">
+      </div>
+      <button class="add-save" id="oSave">Add</button>
+    `;
+    addForm.classList.add('open');
+    document.getElementById('oRepeat').addEventListener('change', (e) => {
+      document.getElementById('oRepeatWrap').classList.toggle('show', e.target.checked);
+    });
+    document.getElementById('oSave').addEventListener('click', () => {
+      const label = document.getElementById('oLabel').value.trim();
+      if (!label) { document.getElementById('oLabel').focus(); return; }
+      const notes = document.getElementById('oNotes').value.trim();
+      const repeat = document.getElementById('oRepeat').checked;
+      const repeatDays = parseInt(document.getElementById('oInterval').value, 10) || 30;
+      addEntry({ type: 'other', date: modalDateStr, label, notes, repeat, repeatDays: repeat ? repeatDays : null });
+      closeModal();
+    });
+  }
+
+  document.getElementById('modalClose').addEventListener('click', closeModal);
+  overlay.addEventListener('click', (e) => { if (e.target === overlay) closeModal(); });
+
+  renderLegend();
+  renderAll();
+  renderExportToggles();
+
+  // ---- Export (last N days, filtered by type) — a normal browser download ----
+  function renderExportToggles() {
+    const wrap = document.getElementById('exportTypeToggles');
+    const all = [...Object.keys(TYPES).map(k => ({ key: k, label: TYPES[k].label, color: TYPES[k].color })),
+                 { key: 'other', label: 'Other', color: 'var(--other)' }];
+    wrap.innerHTML = all.map(t => `
+      <label class="type-toggle" style="--tc:${t.color}">
+        <input type="checkbox" data-type="${t.key}" checked>
+        <span class="dot" style="background:${t.color}"></span>${t.label}
+      </label>
+    `).join('');
+  }
+  function selectedExportTypes() {
+    return [...document.querySelectorAll('#exportTypeToggles input[type="checkbox"]')]
+      .filter(c => c.checked).map(c => c.dataset.type);
+  }
+
+  function csvEscape(v) { v = String(v == null ? '' : v); return /[",\r\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; }
+  function buildCSV(days) {
+    const cutoff = addDays(today, -days);
+    const selected = selectedExportTypes();
+    const rows = [['Date', 'Type', 'Notes', 'Reason for early change']];
+    entries
+      .filter(e => selected.includes(e.type))
+      .filter(e => { const d = fromStr(e.date); return d >= cutoff && d <= today; })
+      .sort((a, b) => a.date.localeCompare(b.date))
+      .forEach(e => {
+        const typeLabel = e.type === 'other' ? (e.label || 'Other') : TYPES[e.type].label;
+        rows.push([e.date, typeLabel, e.notes || '', e.earlyReason || '']);
+      });
+    return rows.map(r => r.map(csvEscape).join(',')).join('\r\n');
+  }
+
+  const exportBtn = document.getElementById('exportBtn');
+  if (exportBtn) exportBtn.disabled = false; // a plain download always works on the real site
+  if (exportBtn) exportBtn.addEventListener('click', () => {
+    const days = parseInt(document.getElementById('exportDays').value, 10) || 30;
+    const csv = buildCSV(days);
+    const status = document.getElementById('exportStatus');
+    try {
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `kylo-changes-last-${days}-days.csv`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      status.textContent = 'Saved.';
+    } catch (err) {
+      status.textContent = 'Couldn\u2019t export \u2014 try again.';
+    }
+  });
+</script>
+
+</body>
+</html>

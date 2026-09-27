@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Kylo Loki</title>
+<title>Kylo's Journey</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;1,9..144,500&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet">
@@ -37,6 +37,10 @@
 
   header.site { padding: 1.5rem 0 0.5rem; font-family: var(--font-display); font-weight: 500; font-size: 1.15rem; }
 
+  .hero { padding: 1.5rem 0 2rem; }
+  .hero h1 { font-family: var(--font-display); font-weight: 500; font-size: clamp(1.8rem, 5vw, 2.6rem); margin: 0 0 0.6rem; line-height: 1.1; }
+  .hero p { color: var(--ink-soft); margin: 0; max-width: 48ch; }
+
   h2.section-head { font-family: var(--font-display); font-weight: 500; font-size: 1.2rem; margin: 0 0 1.25rem; }
 
   .featured { display: grid; grid-template-columns: 1fr 1.2fr; gap: 1.25rem; align-items: start; margin-bottom: 1.5rem; }
@@ -59,46 +63,17 @@
   .archive-link { display: inline-block; margin-top: 0.5rem; font-size: 0.9rem; font-weight: 600; text-decoration: underline; text-decoration-color: var(--line); text-underline-offset: 3px; }
   .archive-link:hover { text-decoration-color: var(--ink); }
 
-  .site-nav { display: flex; justify-content: space-between; align-items: center; padding: 1.25rem 0; }
-  .site-nav .brand { font-family: var(--font-display); font-weight: 500; font-size: 1.1rem; text-decoration: none; }
-  .site-nav nav { display: flex; gap: 1.25rem; }
-  .site-nav nav a { text-decoration: none; font-size: 0.88rem; font-weight: 600; color: var(--ink-soft); }
-  .site-nav nav a:hover { color: var(--ink); }
-
-.about {
-  background: var(--paper-tint); border-radius: 8px; padding: 1.75rem;
-  display: flex; flex-direction: column; gap: 1.25rem;
-  margin: 0.5rem 0 2.25rem;
-}
-.about-mark { flex: 0 0 auto; max-width: 220px; }
-.about-mark img { width: 250%; height: auto; display: block; border-radius: 8px; }  .about p { color: var(--ink-soft); margin: 0 0 0.7rem; font-size: 0.94rem; }
-  .about p:last-child { margin-bottom: 0; }
-
-
   .empty, .loading { color: var(--ink-soft); font-size: 0.92rem; padding: 1rem 0; }
 </style>
 </head>
 <body>
 
 <div class="wrap">
-  <header class="site-nav">
-    <a class="brand" href="/">Kylo Loki</a>
-    <nav>
-      <a href="/calendar/">Calendar</a>
-      <a href="/archive/">All posts</a>
-    </nav>
-  </header>
-  <div class="about">
-    <div class="about-mark">
-      <img src="/images/sunglasses.png" alt="Kylo">
-    </div>
-    <div>
-      <h1>This is the story of Kylo Loki and his journey with Type One Diabetes.</h1>
-      <p>Kylo was diagnosed with Type One Diabetes (T1D) when he was 15 months old, after going into Diabetic KetoAcidosis (DKA) during a family holiday, resulting in a harrowing journey back to the UK, all the while Kylo was fighting for his life. </p>
-      <p>Kylo was diagnosed at 15 months old, which is actually really rare. Most kids are diagnosed between about 4 and 7, or again in their early teens, and only a small number ever get diagnosed before they turn two. Being that young brought its own problems. A 15 month old can't tell you they're thirsty, or tired, or that something feels off, so all the warning signs an older kid could put into words just weren't there for us. That's a big part of why it gets missed so often at this age, until things get serious.</p>
-      <p>Since then it's all been on us. We're the ones reading the signs of highs and lows, working out carbs for a toddler who won't touch his dinner one night and wants three helpings the next, and trying to fit devices made for bigger kids. And he's not even old enough yet to understand what any of it means.</p>
-      <p>Follow us on our family journey, how we manage T1D, the highs and lows, and everything in between.</p>
-    </div>
+  <header class="site">Kylo's Journey</header>
+
+  <div class="hero">
+    <h1>A weekly record of Kylo's type one journey.</h1>
+    <p>A short intro about why we're keeping this, and who it's for.</p>
   </div>
 
   <h2 class="section-head">Latest post</h2>
