@@ -2,234 +2,115 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Carb Calculator - WIP DO NOT USE</title>
-<title>pobajobs@hotmail.co.uk</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Kylo's Journey</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;1,9..144,500&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-:root {
-  --bg: #f4f6f8;
-  --card: #fff;
-  --text: #111;
-  --input-bg: #fff;
-  --button-bg: #0077ff;
-  --button-text: #fff;
-}
+  :root {
+    box-sizing: border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    --paper: #EDF1F3; --paper-tint: #E1E8EB; --card: #F8FBFC;
+    --ink: #202B33; --ink-soft: #58666F;
+    --blue: #3E6E88; --blue-deep: #2C5064; --gold: #BE8A3E; --line: #C9D6DB;
+    --font-display: 'Fraunces', Georgia, serif;
+    --font-body: 'Work Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #16212A; --paper-tint: #1D2B35; --card: #1B2830;
+      --ink: #E7EEF1; --ink-soft: #A8B8C0;
+      --blue: #7FAFC7; --blue-deep: #5A8CA6; --gold: #DBAA5C; --line: #2E3F49;
+    }
+  }
+  html, body { height: 100%; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--paper); color: var(--ink);
+    font-family: var(--font-body); font-size: 16.5px; line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: inherit; }
+  .wrap { max-width: 640px; margin: 0 auto; padding: 0 1.5rem 3rem; }
 
-body.dark {
-  --bg: #121212;
-  --card: #1e1e1e;
-  --text: #eee;
-  --input-bg: #222;
-  --button-bg: #2196f3;
-  --button-text: #fff;
-}
+  header.site { padding: 1.5rem 0 0.5rem; font-family: var(--font-display); font-weight: 500; font-size: 1.15rem; }
 
-body {
-  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-  background: var(--bg);
-  color: var(--text);
-  margin: 0;
-  padding: 1rem;
-}
+  .hero { padding: 1.5rem 0 2rem; }
+  .hero h1 { font-family: var(--font-display); font-weight: 500; font-size: clamp(1.8rem, 5vw, 2.6rem); margin: 0 0 0.6rem; line-height: 1.1; }
+  .hero p { color: var(--ink-soft); margin: 0; max-width: 48ch; }
 
-.container {
-  max-width: 600px;
-  margin: auto;
-}
+  h2.section-head { font-family: var(--font-display); font-weight: 500; font-size: 1.2rem; margin: 0 0 1.25rem; }
 
-h1 {
-  text-align: center;
-}
+  .featured { display: grid; grid-template-columns: 1fr 1.2fr; gap: 1.25rem; align-items: start; margin-bottom: 1.5rem; }
+  .thumb-lg {
+    aspect-ratio: 4/3; border-radius: 6px; background: var(--paper-tint); border: 1px dashed var(--line);
+    display: flex; align-items: center; justify-content: center; color: var(--ink-soft); font-size: 1.3rem;
+  }
+  .featured .meta { font-size: 0.78rem; color: var(--gold); font-weight: 600; margin-bottom: 0.3rem; }
+  .featured h3 { font-family: var(--font-display); font-weight: 500; font-size: 1.3rem; margin: 0 0 0.5rem; }
+  .featured h3 a { text-decoration: none; }
+  .featured h3 a:hover { text-decoration: underline; }
+  .featured p { color: var(--ink-soft); margin: 0; font-size: 0.92rem; }
 
-.card {
-  background: var(--card);
-  padding: 1rem;
-  border-radius: 12px;
-  margin-bottom: 1rem;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-}
+  .plain-list { list-style: none; margin: 0 0 1rem; padding: 0; }
+  .plain-list li { display: flex; justify-content: space-between; gap: 1rem; padding: 0.6rem 0; border-top: 1px solid var(--line); font-size: 0.92rem; }
+  .plain-list li a { text-decoration: none; font-weight: 500; }
+  .plain-list li a:hover { text-decoration: underline; }
+  .plain-list li span { color: var(--ink-soft); font-size: 0.82rem; white-space: nowrap; }
 
-.ingredient {
-  padding: 0.5rem 0;
-  display: flex;
-  flex-direction: column;
-  border-bottom: 1px solid #eee;
-}
+  .archive-link { display: inline-block; margin-top: 0.5rem; font-size: 0.9rem; font-weight: 600; text-decoration: underline; text-decoration-color: var(--line); text-underline-offset: 3px; }
+  .archive-link:hover { text-decoration-color: var(--ink); }
 
-body.dark .ingredient {
-  border-bottom-color: #333;
-}
-
-.ingredient-line {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.ingredient-line span {
-  flex: 1;
-  margin-right: 0.5rem;
-}
-
-input {
-  padding: 0.3rem;
-  font-size: 0.9rem;
-  border-radius: 6px;
-  border: 1px solid #ccc;
-  background: var(--input-bg);
-  color: var(--text);
-  margin-bottom: 0.3rem;
-}
-
-button {
-  padding: 0.5rem;
-  font-size: 0.9rem;
-  border-radius: 6px;
-  border: none;
-  background: var(--button-bg);
-  color: var(--button-text);
-  cursor: pointer;
-  margin-left: 0.3rem;
-}
-
-button.remove {
-  background: #ff4d4d;
-}
-
-.result {
-  font-weight: bold;
-  margin-top: 0.5rem;
-}
-
-.toggle-dark {
-  display: block;
-  margin: 0 auto 1rem;
-}
+  .empty, .loading { color: var(--ink-soft); font-size: 0.92rem; padding: 1rem 0; }
 </style>
 </head>
 <body>
-<div class="container">
-  <h1>Carb Calculator</h1>
-  <button class="toggle-dark" onclick="toggleDarkMode()">Toggle Dark Mode</button>
 
-  <div class="card">
-    <h2>Ingredients</h2>
-    <div id="ingredients"></div>
-    <button onclick="addIngredient()">Add Ingredient</button>
+<div class="wrap">
+  <header class="site">Kylo's Journey</header>
+
+  <div class="hero">
+    <h1>A weekly record of Kylo's type one journey.</h1>
+    <p>A short intro about why we're keeping this, and who it's for.</p>
   </div>
 
-  <div class="card">
-    <h2>Totals</h2>
-    <div>Total Carbs: <span id="totalCarbs">0</span> g</div>
-    <div>Total Weight: <span id="totalWeight">0</span> g</div>
-    <div>Carbs per 100g: <span id="per100">0</span> g</div>
-
-    <hr>
-
-    <label>Servings:</label>
-    <input type="number" id="servings" value="1" oninput="calculate()">
-
-    <div class="result">
-      Carbs per Serving: <span id="perServing">0</span> g
-    </div>
+  <h2 class="section-head">Latest post</h2>
+  <div id="journalRoot">
+    <p class="loading">Loading the latest post&hellip;</p>
   </div>
 </div>
 
+<script src="/assets/journal.js"></script>
 <script>
-/* ------------------ Dark Mode ------------------ */
-function toggleDarkMode() {
-  document.body.classList.toggle('dark');
-}
+  fetchPosts().then(posts => {
+    const root = document.getElementById('journalRoot');
 
-/* ------------------ Ingredients ------------------ */
-function addIngredient() {
-  const container = document.getElementById("ingredients");
-  const div = document.createElement("div");
-  div.className = "ingredient";
-
-  // Start in edit mode
-  div.innerHTML = ingredientEditHTML({}, true);
-
-  container.appendChild(div);
-  calculate();
-}
-
-function ingredientEditHTML(data = {}, editMode = true) {
-  if(editMode) {
-    return `
-      <input type="text" placeholder="Ingredient name" value="${data.name || ''}">
-      <input type="number" placeholder="Carbs amount" class="carbs" value="${data.carbs || ''}" oninput="calculate()">
-      <input type="number" placeholder="Per (g)" class="refWeight" value="${data.refWeight || ''}" oninput="calculate()">
-      <input type="number" placeholder="Ingredient weight (g)" class="weight" value="${data.weight || ''}" oninput="calculate()">
-      <button onclick="saveIngredient(this)">Save</button>
-      <button class="remove" onclick="this.parentElement.remove(); calculate()">Remove</button>
-    `;
-  } else {
-    const totalCarbs = data.refWeight > 0 ? ((data.carbs / data.refWeight) * data.weight).toFixed(2) : '0.00';
-    return `
-      <div class="ingredient-line">
-        <span>${data.name || ''} — ${data.carbs || 0}g / ${data.refWeight || 0}g — ${data.weight || 0}g — ${totalCarbs}g total</span>
-        <button onclick="editIngredient(this)">Edit</button>
-        <button class="remove" onclick="this.parentElement.parentElement.remove(); calculate()">Remove</button>
-      </div>
-    `;
-  }
-}
-
-function saveIngredient(button) {
-  const parent = button.parentElement;
-  const data = {
-    name: parent.querySelector('input[type=text]').value,
-    carbs: parseFloat(parent.querySelector('.carbs').value) || 0,
-    refWeight: parseFloat(parent.querySelector('.refWeight').value) || 0,
-    weight: parseFloat(parent.querySelector('.weight').value) || 0
-  };
-  parent.innerHTML = ingredientEditHTML(data, false);
-  calculate();
-}
-
-function editIngredient(button) {
-  const parent = button.parentElement.parentElement;
-  const parts = parent.querySelector('span').innerText.split(' — ');
-  const data = {
-    name: parts[0],
-    carbs: parseFloat(parts[1]),
-    refWeight: parseFloat(parts[2]),
-    weight: parseFloat(parts[3]),
-  };
-  parent.innerHTML = ingredientEditHTML(data, true);
-}
-
-/* ------------------ Calculate ------------------ */
-function calculate() {
-  let totalCarbs = 0;
-  let totalWeight = 0;
-
-  document.querySelectorAll(".ingredient").forEach(ing => {
-    const inputs = ing.querySelectorAll("input");
-    if(inputs.length === 0) { // compact view
-      const parts = ing.querySelector('span').innerText.split(' — ');
-      const carbs = parseFloat(parts[1]) || 0;
-      const refWeight = parseFloat(parts[2]) || 0;
-      const weight = parseFloat(parts[3]) || 0;
-      if(refWeight > 0) totalCarbs += (carbs / refWeight) * weight;
-      totalWeight += weight;
-    } else { // still editing, don't count yet
-      const carbs = parseFloat(ing.querySelector('.carbs').value) || 0;
-      const refWeight = parseFloat(ing.querySelector('.refWeight').value) || 0;
-      const weight = parseFloat(ing.querySelector('.weight').value) || 0;
-      if(refWeight > 0) totalCarbs += (carbs / refWeight) * weight;
-      totalWeight += weight;
+    if (!posts.length) {
+      root.innerHTML = '<p class="empty">No posts yet — add one under /journal/ in the repo and it\u2019ll show up here automatically.</p>';
+      return;
     }
+
+    const [latest, ...rest] = posts;
+    const recent = rest.slice(0, 3);
+
+    root.innerHTML = `
+      <div class="featured">
+        <div class="thumb-lg">\u25B6</div>
+        <div>
+          <div class="meta">${fmtPostDate(latest.date)}</div>
+          <h3><a href="/journal/${latest.slug}/">${latest.title}</a></h3>
+          <p>${latest.summary}</p>
+        </div>
+      </div>
+      ${recent.length ? `<ul class="plain-list">
+        ${recent.map(p => `<li><a href="/journal/${p.slug}/">${p.title}</a><span>${fmtPostDate(p.date)}</span></li>`).join('')}
+      </ul>` : ''}
+      ${posts.length > 1 ? `<a class="archive-link" href="/archive/">View all posts</a>` : ''}
+    `;
   });
-
-  document.getElementById("totalCarbs").innerText = totalCarbs.toFixed(2);
-  document.getElementById("totalWeight").innerText = totalWeight.toFixed(2);
-  document.getElementById("per100").innerText = totalWeight ? ((totalCarbs / totalWeight) * 100).toFixed(2) : 0;
-
-  const servings = parseFloat(document.getElementById("servings").value) || 1;
-  document.getElementById("perServing").innerText = (totalCarbs / servings).toFixed(2);
-}
 </script>
+
 </body>
 </html>

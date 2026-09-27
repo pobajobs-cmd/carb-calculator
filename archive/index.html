@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>All posts — Kylo's Journey</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    box-sizing: border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    --paper: #EDF1F3; --card: #F8FBFC; --ink: #202B33; --ink-soft: #58666F;
+    --gold: #BE8A3E; --line: #C9D6DB;
+    --font-display: 'Fraunces', Georgia, serif;
+    --font-body: 'Work Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #16212A; --card: #1B2830; --ink: #E7EEF1; --ink-soft: #A8B8C0;
+      --gold: #DBAA5C; --line: #2E3F49;
+    }
+  }
+  html, body { height: 100%; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--paper); color: var(--ink);
+    font-family: var(--font-body); font-size: 16.5px; line-height: 1.6;
+  }
+  a { color: inherit; text-decoration: none; }
+  .wrap { max-width: 640px; margin: 0 auto; padding: 0 1.5rem 3rem; }
+  .back { display: inline-block; padding: 1.5rem 0 0.5rem; font-size: 0.88rem; font-weight: 600; color: var(--ink-soft); }
+  .back:hover { color: var(--ink); }
+  h1 { font-family: var(--font-display); font-weight: 500; font-size: 1.7rem; margin: 0.5rem 0 1.5rem; }
+
+  .dense-row { display: flex; gap: 1.1rem; padding: 0.85rem 0; border-top: 1px solid var(--line); }
+  .dense-row:first-child { border-top: none; }
+  .dense-date { flex: 0 0 100px; font-size: 0.8rem; color: var(--ink-soft); padding-top: 0.15rem; }
+  .dense-row h4 { font-size: 0.98rem; font-weight: 600; margin: 0; }
+  .dense-row:hover h4 { text-decoration: underline; }
+
+  .empty, .loading { color: var(--ink-soft); font-size: 0.92rem; padding: 1rem 0; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="/">&larr; Back to the journal</a>
+  <h1>All posts</h1>
+  <div id="listRoot"><p class="loading">Loading&hellip;</p></div>
+</div>
+
+<script src="/assets/journal.js"></script>
+<script>
+  fetchPosts().then(posts => {
+    const root = document.getElementById('listRoot');
+    if (!posts.length) {
+      root.innerHTML = '<p class="empty">No posts yet.</p>';
+      return;
+    }
+    root.innerHTML = posts.map(p => `
+      <a class="dense-row" href="/journal/${p.slug}/">
+        <span class="dense-date">${fmtPostDate(p.date)}</span>
+        <h4>${p.title}</h4>
+      </a>
+    `).join('');
+  });
+</script>
+</body>
+</html>

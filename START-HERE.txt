@@ -1,0 +1,70 @@
+START HERE
+==========
+
+What's in this folder:
+
+  index.html                    → the homepage
+  archive/index.html            → the "all posts" page
+  assets/journal.js             → makes the homepage find posts automatically
+  journal/2026-09-21/index.html → one example post, already filled in
+  post-template.html            → copy this each time you write a new post
+
+
+HOW TO PUT THIS ON YOUR SITE (GitHub web upload — no software needed)
+-----------------------------------------------------------------------
+
+1. Go to: https://github.com/pobajobs-cmd/carb-calculator
+
+2. Click "Add file" → "Upload files"
+   (top right area of the file list, above the code)
+
+3. On your computer, open this unzipped folder so you can see
+   index.html, archive, assets, and journal all sitting together.
+
+4. Select all of them (Ctrl+A on Windows, Cmd+A on Mac) and drag
+   the whole selection onto GitHub's upload box in your browser.
+   GitHub will keep the folders exactly as they are — you don't
+   need to create archive/ or assets/ yourself first.
+
+5. Scroll down, type a short message like "add homepage and first post"
+   in the box that says "Commit changes", then click the green
+   "Commit changes" button.
+
+6. Wait about a minute, then visit your site. If it doesn't look
+   right straight away, try a hard refresh (Ctrl+Shift+R on
+   Windows, Cmd+Shift+R on Mac) — your browser sometimes holds
+   onto the old version for a bit.
+
+
+ADDING A NEW POST LATER
+-----------------------
+
+1. Make a copy of post-template.html on your computer.
+
+2. Open the copy in any text editor and fill in the parts marked
+   EDIT 1 through EDIT 7 — title, date, YouTube video, your writing.
+
+3. On GitHub, click "Add file" → "Create new file".
+
+4. In the file name box, type:  journal/2026-10-05/index.html
+   (using the real date, and the exact word "index.html" — the
+   date becomes the folder automatically when you type the slash)
+
+5. Paste in your filled-out template, then "Commit changes" as before.
+
+6. Wait a minute — your homepage updates itself, no other file
+   needs touching.
+
+
+ONE THING TO DOUBLE-CHECK
+--------------------------
+
+assets/journal.js assumes your repository's main branch is called
+"main". If, for any reason, yours is called "master" instead,
+open assets/journal.js, find the line:
+
+    const JOURNAL_BRANCH = 'main';
+
+and change 'main' to 'master'. You can check which one you have
+by looking at the button near the top-left of your repository's
+file list on GitHub — it shows the branch name.
