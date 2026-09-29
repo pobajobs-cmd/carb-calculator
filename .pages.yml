@@ -1,0 +1,32 @@
+media:
+  input: images
+  output: /images
+
+content:
+  - name: journal
+    label: Journal posts
+    type: collection
+    path: journal
+    filename: "{year}-{month}-{day}.md"
+    view:
+      fields: [title, date]
+      sort: date
+      sort_direction: desc
+    fields:
+      - name: title
+        label: Title
+        type: string
+        required: true
+      - name: date
+        label: Date
+        type: date
+        required: true
+      - name: summary
+        label: One-line summary (shown on the homepage)
+        type: text
+      - name: video
+        label: YouTube link (optional — paste the full URL)
+        type: string
+      - name: body
+        label: Post
+        type: rich-text
