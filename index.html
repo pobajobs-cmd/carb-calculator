@@ -125,12 +125,12 @@
         <div class="thumb-lg">\u25B6</div>
         <div>
           <div class="meta">${fmtPostDate(latest.date)}</div>
-          <h3><a href="/journal/${latest.slug}/">${latest.title}</a></h3>
+          <h3><a href="/post/?slug=${latest.slug}">${latest.title}</a></h3>
           <p>${latest.summary}</p>
         </div>
       </div>
       ${recent.length ? `<ul class="plain-list">
-        ${recent.map(p => `<li><a href="/journal/${p.slug}/">${p.title}</a><span>${fmtPostDate(p.date)}</span></li>`).join('')}
+        ${recent.map(p => `<li><a href="/post/?slug=${p.slug}">${p.title}</a><span>${fmtPostDate(p.date)}</span></li>`).join('')}
       </ul>` : ''}
       ${posts.length > 1 ? `<a class="archive-link" href="/archive/">View all posts</a>` : ''}
     `;

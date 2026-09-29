@@ -68,7 +68,7 @@
       return;
     }
     root.innerHTML = posts.map(p => `
-      <a class="dense-row" href="/journal/${p.slug}/">
+      <a class="dense-row" href="/post/?slug=${p.slug}">
         <span class="dense-date">${fmtPostDate(p.date)}</span>
         <h4>${p.title}</h4>
       </a>

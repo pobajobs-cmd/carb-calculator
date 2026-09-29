@@ -1,76 +1,64 @@
-START HERE
-==========
+START HERE — Pages CMS update
+==============================
 
-What's in this folder:
+What changed
+-------------
 
-  index.html                    → the homepage (About section + latest post)
-  calendar/index.html           → the family calendar, its own page
-  archive/index.html            → the "all posts" page
-  assets/journal.js             → makes the homepage find posts automatically
-  journal/2026-09-21/index.html → one example post, already filled in
-  post-template.html            → copy this each time you write a new post
+Journal posts used to be full HTML files, one folder per post. From
+now on they're small, plain text files (Markdown) with a bit of
+structured info at the top — the CMS edits these for you, so
+you'll rarely open one by hand again.
 
-New this time: the calendar's "Export CSV" button now uses a normal
-browser download (it previously relied on something only available
-inside Claude's preview) — on your real site it'll just download
-the file straight to your device, no extra setup needed.
-
-
-HOW TO PUT THIS ON YOUR SITE (GitHub web upload — no software needed)
------------------------------------------------------------------------
-
-1. Go to: https://github.com/pobajobs-cmd/carb-calculator
-
-2. Click "Add file" → "Upload files"
-   (top right area of the file list, above the code)
-
-3. On your computer, open this unzipped folder so you can see
-   index.html, archive, assets, and journal all sitting together.
-
-4. Select all of them (Ctrl+A on Windows, Cmd+A on Mac) and drag
-   the whole selection onto GitHub's upload box in your browser.
-   GitHub will keep the folders exactly as they are — you don't
-   need to create archive/ or assets/ yourself first.
-
-5. Scroll down, type a short message like "add homepage and first post"
-   in the box that says "Commit changes", then click the green
-   "Commit changes" button.
-
-6. Wait about a minute, then visit your site. If it doesn't look
-   right straight away, try a hard refresh (Ctrl+Shift+R on
-   Windows, Cmd+Shift+R on Mac) — your browser sometimes holds
-   onto the old version for a bit.
+Two new things: a .pages.yml file (tells Pages CMS what a journal
+post looks like — title, date, summary, video, text), and a
+post/index.html page that displays whichever post you're viewing.
+This replaces the old "one folder per post" approach — posts no
+longer get their own folder, just one small file each.
 
 
-ADDING A NEW POST LATER
------------------------
+UPLOADING THIS BATCH
+---------------------
 
-1. Make a copy of post-template.html on your computer.
+Same as always: unzip this folder, go to your repo on github.com,
+"Add file" → "Upload files", drag everything in, commit.
 
-2. Open the copy in any text editor and fill in the parts marked
-   EDIT 1 through EDIT 7 — title, date, YouTube video, your writing.
+Note: .pages.yml starts with a dot, so it might be hidden by
+default in your computer's file browser. If you don't see it in
+the unzipped folder, turn on "show hidden files" (Ctrl+H on
+Windows/Linux Explorer, Cmd+Shift+. in Mac Finder) — it is there.
 
-3. On GitHub, click "Add file" → "Create new file".
-
-4. In the file name box, type:  journal/2026-10-05/index.html
-   (using the real date, and the exact word "index.html" — the
-   date becomes the folder automatically when you type the slash)
-
-5. Paste in your filled-out template, then "Commit changes" as before.
-
-6. Wait a minute — your homepage updates itself, no other file
-   needs touching.
+One cleanup step: your repo currently still has the OLD example
+post at journal/2026-09-21/index.html (a folder). On github.com,
+open that folder, delete the index.html file inside it, and it'll
+clean itself up. It's been replaced by journal/2026-09-21.md in
+this upload, which does the same job the new way.
 
 
-ONE THING TO DOUBLE-CHECK
---------------------------
+USING PAGES CMS FROM NOW ON
+-----------------------------
 
-assets/journal.js assumes your repository's main branch is called
-"main". If, for any reason, yours is called "master" instead,
-open assets/journal.js, find the line:
+1. Go to app.pagescms.org and open this repository.
+2. You should see a "Journal posts" collection — click it.
+3. "Add entry" for a new post, or click an existing one to edit it.
+4. Fill in: title, date, a one-line summary, and (optional) the
+   full YouTube link for that week's video. Write the post itself
+   in the big text box — it supports bold, italics, links, and
+   photos through its toolbar.
+5. Save. Pages CMS commits the file to GitHub for you — no zip,
+   no upload screen, no "Add file" button. Give it a minute and
+   it's live, same as before.
 
-    const JOURNAL_BRANCH = 'main';
+Photos you add through the editor land in the images/ folder
+automatically — you don't need to think about where they go.
 
-and change 'main' to 'master'. You can check which one you have
-by looking at the button near the top-left of your repository's
-file list on GitHub — it shows the branch name.
+
+WHY POSTS ARE AT /post/?slug=2026-09-21 NOW
+----------------------------------------------
+
+Slightly different look to the old /journal/2026-09-21/ addresses.
+Clean folder-style addresses need something to build a folder for
+each post automatically, which needs a build step — extra moving
+parts we didn't want. This way stays a plain, static site with
+nothing to install or run, at the cost of a slightly less tidy
+address. If that ever bothers you, it's a small upgrade later, not
+a rebuild.
