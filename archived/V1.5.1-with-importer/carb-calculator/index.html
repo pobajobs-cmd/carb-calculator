@@ -88,8 +88,6 @@
   .imp-head .ic svg { width: 20px; height: 20px; }
   .imp-head h2 { font-family: var(--font-display); font-weight: 500; font-size: 1.2rem; margin: 0 0 0.15rem; }
   .imp-head p { margin: 0; color: var(--ink-soft); font-size: 0.9rem; }
-  .soon-card .imp-head { margin-bottom: 0; }
-  .soon-tag { display: inline-block; vertical-align: 3px; margin-left: 0.4rem; font-family: var(--font-body); font-size: 0.68rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--gold); border: 1.5px solid var(--gold); border-radius: 999px; padding: 0.1rem 0.55rem; }
   .imp-form { display: flex; gap: 0.5rem; }
   .imp-form .in { flex: 1; min-width: 0; }
   .imp-form .btn { flex: 0 0 auto; }
@@ -198,19 +196,21 @@
     <span class="eyebrow">Tools</span>
     <h1>Carb <em>calculator</em></h1>
     <p class="lede">Add each ingredient with its weight and the carbs per 100g from the packet. It'll work out the total carbs for the whole recipe, per serving, and for a weighed portion.</p>
-    <div class="callout" style="margin:1.25rem 0 0; max-width:46em;">
-      <p>Carb values on packets and in databases are a guide, and every recipe varies. Always check with your diabetes team about how to dose.</p>
-    </div>
   </header>
 
-  <section class="card import soon-card">
+  <section class="card import">
     <div class="imp-head">
       <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.07 0l3-3a5 5 0 0 0-7.07-7.07l-1.5 1.5"/><path d="M14 11a5 5 0 0 0-7.07 0l-3 3a5 5 0 0 0 7.07 7.07l1.5-1.5"/></svg></span>
       <div>
-        <h2>Import from a recipe link <span class="soon-tag">Coming soon</span></h2>
-        <p>Soon you'll be able to paste a link from a recipe website and have the ingredients and carbs filled in for you.</p>
+        <h2>Import from a recipe link</h2>
+        <p>Paste a link from a recipe website. It'll fill in the ingredients and estimate the carbs. Check anything highlighted before you rely on it.</p>
       </div>
     </div>
+    <form class="imp-form" id="importForm">
+      <input class="in" id="importUrl" type="url" inputmode="url" placeholder="https://www.bbcgoodfood.com/recipes/..." aria-label="Recipe link" required>
+      <button class="btn" id="importBtn" type="submit">Import recipe</button>
+    </form>
+    <div class="imp-status" id="importStatus" role="status"></div>
   </section>
 
   <div class="calc">
@@ -286,11 +286,14 @@
     <ul class="saved-list" id="savedList"></ul>
   </section>
 
+  <div class="callout narrow" style="max-width:none; margin-top:2.5rem;">
+    <p>Carb values on packets and in databases are a guide, and every recipe varies. Always check with your diabetes team about how to dose.</p>
+  </div>
 </div>
 <footer class="site-footer" id="siteFooter"></footer>
 <div class="print-sheet" id="printSheet" aria-hidden="true"></div>
 <script src="/assets/site.js"></script>
-<!-- <script src="/assets/ingredients.js"></script>  (re-enable with the recipe-link importer) -->
+<script src="/assets/ingredients.js"></script>
 <script>
   const STORE_KEY = 'kylo-carb-recipes-v1';
   const DRAFT_KEY = 'kylo-carb-draft-v1';
@@ -555,7 +558,7 @@
   let undoRecipe = null;
   function importStatus(html, kind) { const el = $('importStatus'); el.className = 'imp-status' + (kind ? ' ' + kind : ''); el.innerHTML = html; }
 
-  $('importForm')?.addEventListener('submit', async (e) => {
+  $('importForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const url = $('importUrl').value.trim();
     if (!url) return;
