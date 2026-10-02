@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Podcast — Kylo Loki</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;1,9..144,500&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/site.css">
+<style>
+  .episode { position: relative; overflow: hidden; }
+  .ep-top { display: flex; gap: 1.1rem; align-items: center; margin-bottom: 1.1rem; }
+  .ep-num {
+    flex: 0 0 auto; width: 72px; height: 72px; border-radius: 16px;
+    background: linear-gradient(140deg, var(--blue-deep), var(--blue)); color: #fff;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1;
+  }
+  .ep-num small { font-size: 0.62rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; opacity: 0.8; margin-bottom: 0.25rem; }
+  .ep-num b { font-family: var(--font-display); font-weight: 500; font-size: 1.35rem; }
+  .ep-top h2 { font-family: var(--font-display); font-weight: 500; font-size: clamp(1.3rem, 1.1rem + 1vw, 1.7rem); line-height: 1.2; margin: 0 0 0.2rem; }
+  .ep-meta { font-size: 0.85rem; color: var(--ink-soft); }
+  .quote { font-family: var(--font-display); font-style: italic; font-size: 1.1rem; line-height: 1.5; color: var(--ink); border-left: 3px solid var(--gold); padding-left: 1rem; margin: 0 0 1.4rem; }
+  .player { width: 100%; height: 175px; border: 0; border-radius: 12px; overflow: hidden; display: block; background: var(--paper-tint); margin-bottom: 1rem; }
+  .actions { display: flex; flex-wrap: wrap; gap: 0.6rem; }
+  .about-show { margin-top: 2rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="site-nav" id="siteNav"></header>
+
+  <div class="narrow">
+    <header class="page-head">
+      <span class="eyebrow">Podcast</span>
+      <h1>As heard on the <em>Juicebox Podcast</em></h1>
+      <p class="lede">We were invited on the Juicebox Podcast, one of the best-known podcasts about Type One Diabetes, to talk about Kylo's diagnosis and the early days that followed.</p>
+    </header>
+
+    <article class="card episode">
+      <div class="ep-top">
+        <div class="ep-num"><small>Ep.</small><b>1910</b></div>
+        <div>
+          <h2>Dancing with the Devil</h2>
+          <div class="ep-meta">Juicebox Podcast: Type 1 Diabetes &middot; 23 July 2026 &middot; 1 hr 22 min</div>
+        </div>
+      </div>
+
+      <p class="quote">&ldquo;Four months in, a dad shares how a family holiday nearly ended in tragedy &mdash; his 15-month-old rushed into DKA after being sent home twice with a &lsquo;chest infection.&rsquo;&rdquo;</p>
+
+      <iframe class="player" title="Juicebox Podcast episode 1910: Dancing with the Devil"
+        allow="autoplay *; encrypted-media *; fullscreen *; clipboard-write"
+        sandbox="allow-forms allow-popups allow-same-origin allow-scripts allow-storage-access-by-user-activation allow-top-navigation-by-user-activation"
+        src="https://embed.podcasts.apple.com/gb/podcast/1910-dancing-with-the-devil/id962416631?i=1000778073742" loading="lazy"></iframe>
+
+      <div class="actions">
+        <a class="btn" href="https://podcasts.apple.com/gb/podcast/1910-dancing-with-the-devil/id962416631?i=1000778073742" target="_blank" rel="noopener">Open in Apple Podcasts</a>
+        <a class="btn ghost" href="/story/">Read Kylo's story</a>
+      </div>
+    </article>
+
+    <section class="prose about-show">
+      <h2>About the show</h2>
+      <p>The Juicebox Podcast is hosted by Scott Benner, whose daughter has Type One Diabetes. It's full of real conversations with people living with T1D and the families looking after them, and it's available wherever you get your podcasts.</p>
+    </section>
+  </div>
+</div>
+<footer class="site-footer" id="siteFooter"></footer>
+<script src="/assets/site.js"></script>
+</body>
+</html>

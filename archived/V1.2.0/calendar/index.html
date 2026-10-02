@@ -3,42 +3,66 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Family calendar — Kylo Loki</title>
+<title>Kylo's Calendar — experiment</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;1,9..144,500&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/assets/site.css">
 <style>
   :root {
+    box-sizing: border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    --paper: #EDF1F3; --paper-tint: #E1E8EB; --card: #F8FBFC;
+    --ink: #202B33; --ink-soft: #58666F; --line: #C9D6DB;
     --pump: #C0453D; --sensor: #4F8C5B; --transmitter: #D3A227; --pen: #3E6E88; --other: #8B5FA3;
+    --font-display: 'Fraunces', Georgia, serif;
+    --font-body: 'Work Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   }
   @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) { --pump: #D97A73; --sensor: #83B08C; --transmitter: #E0BC5E; --pen: #7FAFC7; --other: #B190C4; }
+    :root:not([data-theme="light"]) {
+      --paper: #16212A; --paper-tint: #1D2B35; --card: #1B2830;
+      --ink: #E7EEF1; --ink-soft: #A8B8C0; --line: #2E3F49;
+      --pump: #D97A73; --sensor: #83B08C; --transmitter: #E0BC5E; --pen: #7FAFC7; --other: #B190C4;
+    }
   }
-  :root[data-theme="dark"] { --pump: #D97A73; --sensor: #83B08C; --transmitter: #E0BC5E; --pen: #7FAFC7; --other: #B190C4; }
-
-  .cal-page { max-width: 760px; margin: 0 auto; }
-  .head-row { display: flex; justify-content: space-between; align-items: flex-end; gap: 1rem; flex-wrap: wrap; }
-  .head-row .btn { padding: 0.55rem 1rem; font-size: 0.86rem; }
+  :root[data-theme="dark"] {
+    --paper: #16212A; --paper-tint: #1D2B35; --card: #1B2830;
+    --ink: #E7EEF1; --ink-soft: #A8B8C0; --line: #2E3F49;
+    --pump: #D97A73; --sensor: #83B08C; --transmitter: #E0BC5E; --pen: #7FAFC7; --other: #B190C4;
+  }
+  html, body { height: 100%; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--paper); color: var(--ink);
+    font-family: var(--font-body); font-size: 16px; line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+  .banner {
+    background: var(--pen); color: var(--card); text-align: center;
+    font-size: 0.85rem; padding: 0.6rem 1rem; padding-top: calc(0.6rem + env(safe-area-inset-top, 0px));
+  }
+  .wrap { max-width: 640px; margin: 0 auto; padding: 1.75rem 1.5rem 3rem; }
+  .site-nav { display: flex; justify-content: space-between; align-items: center; padding: 0 0 1rem; }
+  .site-nav .brand { font-family: var(--font-display); font-weight: 500; font-size: 1.1rem; text-decoration: none; color: var(--ink); }
+  .site-nav nav a { text-decoration: none; font-size: 0.88rem; font-weight: 600; color: var(--ink-soft); }
+  .site-nav nav a:hover { color: var(--ink); }
+  h1 { font-family: var(--font-display); font-weight: 500; font-size: 1.5rem; margin: 0 0 0.4rem; }
   .sub { color: var(--ink-soft); font-size: 0.92rem; margin: 0 0 1.5rem; }
-  .cal-card { padding: clamp(0.9rem, 3vw, 1.5rem); }
-  .overview, #exportSection { margin-top: 1.25rem; }
-  .overview h2, #exportSection h2 { font-family: var(--font-display); font-weight: 500; font-size: 1.25rem; margin: 0 0 0.9rem; }
 
   .cal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.9rem; }
   .cal-title { font-family: var(--font-display); font-weight: 500; font-size: 1.2rem; }
   .cal-nav { display: flex; gap: 0.5rem; }
   .cal-nav button {
-    width: 38px; height: 38px; border-radius: 50%; border: 1px solid var(--line);
+    width: 34px; height: 34px; border-radius: 50%; border: 1px solid var(--line);
     background: var(--card); color: var(--ink); font-size: 1rem; cursor: pointer;
   }
   .cal-nav button:hover { border-color: var(--pen); }
 
-  .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px;
-    background: var(--line); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+  .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px;
+    background: var(--line); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
   .cal-dow { background: var(--paper-tint); text-align: center; font-size: 0.7rem; font-weight: 600;
     color: var(--ink-soft); padding: 0.45rem 0.1rem; }
-  .cal-day { background: var(--card); min-height: clamp(52px, 10vw, 76px); padding: 0.3rem; display: flex; flex-direction: column;
+  .cal-day { background: var(--card); min-height: 58px; padding: 0.3rem; display: flex; flex-direction: column;
     gap: 0.2rem; cursor: pointer; border: none; text-align: left; font: inherit; color: inherit; }
   .cal-day:hover { background: var(--paper-tint); }
   .cal-day.empty { background: var(--paper); cursor: default; }
@@ -56,9 +80,10 @@
   .legend .swatch { width: 9px; height: 9px; border-radius: 50%; }
   .legend-key { font-size: 0.75rem; color: var(--ink-soft); margin-top: 0.3rem; }
 
+  .overview { margin-top: 2rem; }
+  .overview h2 { font-family: var(--font-display); font-weight: 500; font-size: 1.1rem; margin: 0 0 0.8rem; }
   .device-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.9rem; }
-  @media (max-width: 420px) { .device-grid { grid-template-columns: 1fr; } }
-  .device-card { background: var(--card); border: 1px solid var(--line); border-radius: 12px;
+  .device-card { background: var(--card); border: 1px solid var(--line); border-radius: 8px;
     padding: 1rem 1.1rem; border-left: 4px solid var(--dc, var(--pen)); }
   .device-card h4 { font-family: var(--font-display); font-weight: 500; font-size: 0.98rem; margin: 0 0 0.35rem; }
   .device-card .due { font-size: 0.83rem; color: var(--ink-soft); }
@@ -140,52 +165,43 @@
 <body>
 
 <div class="wrap">
-  <header class="site-nav" id="siteNav"></header>
+  <header class="site-nav">
+    <a class="brand" href="/">Kylo's Journey</a>
+    <nav><a href="#" id="settingsLink">Settings</a> · <a href="/archive/">All posts</a></nav>
+  </header>
 
-  <div class="cal-page">
-    <header class="page-head">
-      <span class="eyebrow">Tools</span>
-      <div class="head-row">
-        <h1 style="margin-bottom:0">Family <em>calendar</em></h1>
-        <button class="btn ghost" id="settingsLink" type="button">Settings</button>
-      </div>
-    </header>
-    <p class="sub">Tap a day to see what's logged or forecast there, and to add a new change.</p>
+  <h1>Family calendar</h1>
+  <p class="sub">Tap a day to see what's logged or forecast there, and to add a new change.</p>
 
-    <section class="card cal-card">
-      <div class="cal-head">
-        <span class="cal-title" id="calTitle"></span>
-        <div class="cal-nav">
-          <button id="calPrev" aria-label="Previous month">&lsaquo;</button>
-          <button id="calNext" aria-label="Next month">&rsaquo;</button>
-        </div>
-      </div>
-      <div class="cal-grid" id="calGrid"></div>
+  <div class="cal-head">
+    <span class="cal-title" id="calTitle"></span>
+    <div class="cal-nav">
+      <button id="calPrev" aria-label="Previous month">‹</button>
+      <button id="calNext" aria-label="Next month">›</button>
+    </div>
+  </div>
+  <div class="cal-grid" id="calGrid"></div>
 
-      <div class="legend" id="legend"></div>
-      <p class="legend-key">&#9679; logged &nbsp; &#9675; forecast &nbsp; &#8856; superseded forecast</p>
-    </section>
+  <div class="legend" id="legend"></div>
+  <p class="legend-key">● logged &nbsp; ○ forecast &nbsp; ⊘ superseded forecast</p>
 
-    <section class="card overview">
-      <h2>Next changes</h2>
-      <div class="device-grid" id="deviceGrid"></div>
-    </section>
+  <div class="overview">
+    <h2>Next changes</h2>
+    <div class="device-grid" id="deviceGrid"></div>
+  </div>
 
-    <section class="card" id="exportSection">
-      <h2>Export</h2>
-      <p class="sub" style="margin-bottom:0.8rem;">Export logged changes from the last however-many days, handy for a resupply report.</p>
-      <div class="type-toggles" id="exportTypeToggles"></div>
-      <div style="display:flex; gap:0.6rem; align-items:center; flex-wrap:wrap;">
-        <input type="number" id="exportDays" min="1" value="30" style="width:80px; padding:0.55rem 0.6rem; border-radius:8px; border:1px solid var(--line); background:var(--paper); color:var(--ink); font:inherit;">
-        <span style="color:var(--ink-soft); font-size:0.88rem;">days</span>
-        <button class="btn" id="exportBtn" style="padding:0.55rem 1.1rem; font-size:0.86rem;" disabled>Export CSV</button>
-      </div>
-      <p class="legend-key" id="exportStatus" style="margin-top:0.5rem;"></p>
-    </section>
+  <div class="overview" id="exportSection">
+    <h2>Export</h2>
+    <p class="sub" style="margin-bottom:0.8rem;">Export logged changes from the last however-many days — handy for a resupply report.</p>
+    <div class="type-toggles" id="exportTypeToggles"></div>
+    <div style="display:flex; gap:0.6rem; align-items:center; flex-wrap:wrap;">
+      <input type="number" id="exportDays" min="1" value="30" style="width:80px; padding:0.5rem 0.6rem; border-radius:6px; border:1px solid var(--line); background:var(--card); color:var(--ink); font:inherit;">
+      <span style="color:var(--ink-soft); font-size:0.88rem;">days</span>
+      <button id="exportBtn" style="padding:0.55rem 1rem; border-radius:8px; border:none; background:var(--pen); color:var(--card); font-weight:600; cursor:pointer;" disabled>Export CSV</button>
+    </div>
+    <p class="legend-key" id="exportStatus" style="margin-top:0.5rem;"></p>
   </div>
 </div>
-
-<footer class="site-footer" id="siteFooter"></footer>
 
 <div class="overlay" id="overlay">
   <div class="modal">
@@ -213,7 +229,6 @@
   </div>
 </div>
 
-<script src="/assets/site.js"></script>
 <script>
   const DEFAULT_INTERVALS = { pump: 3, sensor: 10, transmitter: 90, pen: 30 };
   const TYPES = {

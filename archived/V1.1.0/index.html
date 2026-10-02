@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Kylo Loki</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;1,9..144,500&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    box-sizing: border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    --paper: #EDF1F3; --paper-tint: #E1E8EB; --card: #F8FBFC;
+    --ink: #202B33; --ink-soft: #58666F;
+    --blue: #3E6E88; --blue-deep: #2C5064; --gold: #BE8A3E; --line: #C9D6DB;
+    --font-display: 'Fraunces', Georgia, serif;
+    --font-body: 'Work Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #16212A; --paper-tint: #1D2B35; --card: #1B2830;
+      --ink: #E7EEF1; --ink-soft: #A8B8C0;
+      --blue: #7FAFC7; --blue-deep: #5A8CA6; --gold: #DBAA5C; --line: #2E3F49;
+    }
+  }
+  html, body { height: 100%; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--paper); color: var(--ink);
+    font-family: var(--font-body); font-size: 16.5px; line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: inherit; }
+  .wrap { max-width: 640px; margin: 0 auto; padding: 0 1.5rem 3rem; }
+
+  header.site { padding: 1.5rem 0 0.5rem; font-family: var(--font-display); font-weight: 500; font-size: 1.15rem; }
+
+  h2.section-head { font-family: var(--font-display); font-weight: 500; font-size: 1.2rem; margin: 0 0 1.25rem; }
+
+  .featured { display: grid; grid-template-columns: 1fr 1.2fr; gap: 1.25rem; align-items: start; margin-bottom: 1.5rem; }
+  .thumb-lg {
+    aspect-ratio: 4/3; border-radius: 6px; background: var(--paper-tint); border: 1px dashed var(--line);
+    display: flex; align-items: center; justify-content: center; color: var(--ink-soft); font-size: 1.3rem;
+  }
+  .featured .meta { font-size: 0.78rem; color: var(--gold); font-weight: 600; margin-bottom: 0.3rem; }
+  .featured h3 { font-family: var(--font-display); font-weight: 500; font-size: 1.3rem; margin: 0 0 0.5rem; }
+  .featured h3 a { text-decoration: none; }
+  .featured h3 a:hover { text-decoration: underline; }
+  .featured p { color: var(--ink-soft); margin: 0; font-size: 0.92rem; }
+
+  .plain-list { list-style: none; margin: 0 0 1rem; padding: 0; }
+  .plain-list li { display: flex; justify-content: space-between; gap: 1rem; padding: 0.6rem 0; border-top: 1px solid var(--line); font-size: 0.92rem; }
+  .plain-list li a { text-decoration: none; font-weight: 500; }
+  .plain-list li a:hover { text-decoration: underline; }
+  .plain-list li span { color: var(--ink-soft); font-size: 0.82rem; white-space: nowrap; }
+
+  .archive-link { display: inline-block; margin-top: 0.5rem; font-size: 0.9rem; font-weight: 600; text-decoration: underline; text-decoration-color: var(--line); text-underline-offset: 3px; }
+  .archive-link:hover { text-decoration-color: var(--ink); }
+
+  .site-nav { display: flex; justify-content: space-between; align-items: center; padding: 1.25rem 0; }
+  .site-nav .brand { font-family: var(--font-display); font-weight: 500; font-size: 1.1rem; text-decoration: none; }
+  .site-nav nav { display: flex; gap: 1.25rem; }
+  .site-nav nav a { text-decoration: none; font-size: 0.88rem; font-weight: 600; color: var(--ink-soft); }
+  .site-nav nav a:hover { color: var(--ink); }
+
+.about {
+  background: var(--paper-tint); border-radius: 8px; padding: 1.75rem;
+  display: flex; flex-direction: column; gap: 1.25rem;
+  margin: 0.5rem 0 2.25rem;
+}
+.about-mark { flex: 0 0 auto; max-width: 220px; }
+.about-mark img { width: 250%; height: auto; display: block; border-radius: 8px; }  .about p { color: var(--ink-soft); margin: 0 0 0.7rem; font-size: 0.94rem; }
+  .about p:last-child { margin-bottom: 0; }
+
+
+  .empty, .loading { color: var(--ink-soft); font-size: 0.92rem; padding: 1rem 0; }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header class="site-nav">
+    <a class="brand" href="/">Kylo Loki</a>
+    <nav>
+      <a href="/calendar/">Calendar</a>
+      <a href="/archive/">All posts</a>
+    </nav>
+  </header>
+  <div class="about">
+    <div class="about-mark">
+      <img src="/images/sunglasses.png" alt="Kylo">
+    </div>
+    <div>
+      <h1>This is the story of Kylo Loki and his journey with Type One Diabetes.</h1>
+      <p>Kylo was diagnosed with Type One Diabetes (T1D) when he was 15 months old, after going into Diabetic KetoAcidosis (DKA) during a family holiday, resulting in a harrowing journey back to the UK, all the while Kylo was fighting for his life. </p>
+      <p>Kylo was diagnosed at 15 months old, which is actually really rare. Most kids are diagnosed between about 4 and 7, or again in their early teens, and only a small number ever get diagnosed before they turn two. Being that young brought its own problems. A 15 month old can't tell you they're thirsty, or tired, or that something feels off, so all the warning signs an older kid could put into words just weren't there for us. That's a big part of why it gets missed so often at this age, until things get serious.</p>
+      <p>Since then it's all been on us. We're the ones reading the signs of highs and lows, working out carbs for a toddler who won't touch his dinner one night and wants three helpings the next, and trying to fit devices made for bigger kids. And he's not even old enough yet to understand what any of it means.</p>
+      <p>Follow us on our family journey, how we manage T1D, the highs and lows, and everything in between.</p>
+    </div>
+  </div>
+
+  <h2 class="section-head">Latest post</h2>
+  <div id="journalRoot">
+    <p class="loading">Loading the latest post&hellip;</p>
+  </div>
+</div>
+
+<script src="/assets/journal.js"></script>
+<script>
+  fetchPosts().then(posts => {
+    const root = document.getElementById('journalRoot');
+
+    if (!posts.length) {
+      root.innerHTML = '<p class="empty">No posts yet — add one under /journal/ in the repo and it\u2019ll show up here automatically.</p>';
+      return;
+    }
+
+    const [latest, ...rest] = posts;
+    const recent = rest.slice(0, 3);
+
+    root.innerHTML = `
+      <div class="featured">
+        <div class="thumb-lg">\u25B6</div>
+        <div>
+          <div class="meta">${fmtPostDate(latest.date)}</div>
+          <h3><a href="/post/?slug=${latest.slug}">${latest.title}</a></h3>
+          <p>${latest.summary}</p>
+        </div>
+      </div>
+      ${recent.length ? `<ul class="plain-list">
+        ${recent.map(p => `<li><a href="/post/?slug=${p.slug}">${p.title}</a><span>${fmtPostDate(p.date)}</span></li>`).join('')}
+      </ul>` : ''}
+      ${posts.length > 1 ? `<a class="archive-link" href="/archive/">View all posts</a>` : ''}
+    `;
+  });
+</script>
+
+</body>
+</html>

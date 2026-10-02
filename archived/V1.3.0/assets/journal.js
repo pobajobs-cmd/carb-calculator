@@ -62,7 +62,6 @@ async function fetchPosts() {
         title: data.title || slug,
         summary: data.summary || '',
         video: data.video || '',
-        placeholder: data.placeholder === 'true',
       };
     } catch (e) {
       return null;
@@ -81,7 +80,6 @@ async function fetchPost(slug) {
     title: data.title || slug,
     summary: data.summary || '',
     video: data.video || '',
-    placeholder: data.placeholder === 'true',
     body,
   };
 }

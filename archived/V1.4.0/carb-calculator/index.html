@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Carb calculator — Kylo Loki</title>
+<meta name="description" content="Work out the total carbs in a homemade recipe, per serving, and per weighed portion.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;1,9..144,500&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/site.css">
+<style>
+  .calc { display: grid; grid-template-columns: 1fr 300px; gap: 1.25rem; align-items: start; }
+
+  label.f { display: block; font-size: 0.8rem; font-weight: 600; color: var(--ink-soft); margin-bottom: 0.3rem; }
+  input.in {
+    width: 100%; padding: 0.6rem 0.75rem; border-radius: 8px; border: 1px solid var(--line);
+    background: var(--paper); color: var(--ink); font: inherit; font-size: 0.95rem;
+  }
+  input.in:focus { outline: 2px solid var(--blue); outline-offset: 1px; border-color: transparent; }
+  input.in[type="number"] { text-align: right; font-variant-numeric: tabular-nums; }
+
+  .recipe-name { font-family: var(--font-display); font-size: 1.25rem; padding: 0.5rem 0.75rem; margin-bottom: 1.25rem; }
+
+  .rows-head, .row { display: grid; grid-template-columns: 1fr 96px 110px 84px 32px; gap: 0.5rem; align-items: center; }
+  .rows-head { font-size: 0.74rem; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--ink-soft); padding: 0 0 0.4rem; }
+  .rows-head .r { text-align: right; }
+  .row { padding: 0.4rem 0; border-top: 1px solid var(--line); }
+  .row .carbs { text-align: right; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .row .carbs small { font-weight: 400; color: var(--ink-soft); }
+  .row .del { border: none; background: none; color: var(--ink-soft); font-size: 1.2rem; cursor: pointer; border-radius: 6px; height: 32px; }
+  .row .del:hover { background: var(--paper-tint); color: var(--ink); }
+  .row .mlabel { display: none; }
+
+  .add-row { margin-top: 0.75rem; }
+
+  .side { position: sticky; top: 1rem; display: flex; flex-direction: column; gap: 1rem; }
+  .totals { background: linear-gradient(150deg, var(--blue-deep), var(--blue)); color: #fff; border: none; }
+  :root[data-theme="dark"] .totals { color: #10202A; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .totals { color: #10202A; } }
+  .totals .big { font-family: var(--font-display); font-size: 2.6rem; line-height: 1; margin: 0.2rem 0 0.2rem; font-variant-numeric: tabular-nums; }
+  .totals .big small { font-size: 1.1rem; }
+  .totals .lbl { font-size: 0.74rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; opacity: 0.85; }
+  .totals .sub { font-size: 0.85rem; opacity: 0.85; }
+  .totals hr { border: none; border-top: 1px solid rgba(255,255,255,0.25); margin: 1rem 0; }
+  .totals .pair { display: flex; justify-content: space-between; align-items: baseline; gap: 0.75rem; }
+  .totals .pair b { font-family: var(--font-display); font-weight: 500; font-size: 1.5rem; font-variant-numeric: tabular-nums; }
+
+  .opt h3 { font-family: var(--font-display); font-weight: 500; font-size: 1.05rem; margin: 0 0 0.25rem; }
+  .opt p.hint { font-size: 0.82rem; color: var(--ink-soft); margin: 0 0 0.7rem; line-height: 1.5; }
+  .opt .grp + .grp { margin-top: 0.8rem; }
+  .opt .result { margin-top: 0.7rem; background: var(--paper-tint); border-radius: 8px; padding: 0.55rem 0.75rem; font-size: 0.9rem; display: flex; justify-content: space-between; }
+  .opt .result b { font-variant-numeric: tabular-nums; }
+
+  .bar { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 1.25rem; }
+  .bar .btn { padding: 0.55rem 1rem; font-size: 0.86rem; }
+  .status { font-size: 0.82rem; color: var(--ink-soft); min-height: 1.2em; margin-top: 0.5rem; }
+
+  .saved h2 { margin-top: 2.5rem; }
+  .saved-list { list-style: none; padding: 0; margin: 0; }
+  .saved-list li { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; padding: 0.7rem 0; border-top: 1px solid var(--line); }
+  .saved-list li .nm { font-weight: 600; }
+  .saved-list li .meta { font-size: 0.82rem; color: var(--ink-soft); }
+  .saved-list li .acts { display: flex; gap: 0.4rem; flex-shrink: 0; }
+  .saved-list button { border: 1px solid var(--line); background: var(--card); color: var(--ink); border-radius: 999px; padding: 0.35rem 0.8rem; font: inherit; font-size: 0.8rem; font-weight: 600; cursor: pointer; }
+  .saved-list button:hover { border-color: var(--blue); }
+
+  @media (max-width: 860px) {
+    .calc { grid-template-columns: 1fr; }
+    .side { position: static; }
+  }
+  @media (max-width: 600px) {
+    .rows-head { display: none; }
+    .row { grid-template-columns: 1fr 1fr 32px; grid-template-areas: "name name del" "w c100 c100" "res res res"; gap: 0.45rem 0.5rem; padding: 0.8rem 0; }
+    .row .c-name { grid-area: name; } .row .c-w { grid-area: w; } .row .c-100 { grid-area: c100; }
+    .row .del { grid-area: del; } .row .carbs { grid-area: res; text-align: left; font-size: 0.9rem; }
+    .row .mlabel { display: block; font-size: 0.72rem; color: var(--ink-soft); font-weight: 600; margin-bottom: 0.15rem; }
+  }
+  @media print {
+    #siteNav, .site-footer, .bar, .saved, .del, .add-row, .page-head .lede { display: none !important; }
+    .calc { grid-template-columns: 1fr; }
+    body { background: #fff; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="site-nav" id="siteNav"></header>
+
+  <header class="page-head narrow" style="max-width:none;">
+    <span class="eyebrow">Tools</span>
+    <h1>Carb <em>calculator</em></h1>
+    <p class="lede">Add each ingredient with its weight and the carbs per 100g from the packet. It'll work out the total carbs for the whole recipe, per serving, and for a weighed portion.</p>
+  </header>
+
+  <div class="calc">
+    <section class="card">
+      <input class="in recipe-name" id="recipeName" type="text" placeholder="Recipe name, e.g. Banana pancakes" aria-label="Recipe name">
+
+      <div class="rows-head">
+        <span>Ingredient</span><span class="r">Weight (g)</span><span class="r">Carbs / 100g</span><span class="r">Carbs</span><span></span>
+      </div>
+      <div id="rows"></div>
+      <button class="btn ghost add-row" id="addRow" type="button">+ Add ingredient</button>
+
+      <div class="bar">
+        <button class="btn" id="saveBtn" type="button">Save recipe</button>
+        <button class="btn ghost" id="copyBtn" type="button">Copy summary</button>
+        <button class="btn ghost" id="printBtn" type="button">Print</button>
+        <button class="btn ghost" id="clearBtn" type="button">Start again</button>
+      </div>
+      <div class="status" id="status" role="status"></div>
+    </section>
+
+    <aside class="side">
+      <div class="card totals">
+        <div class="lbl">Whole recipe</div>
+        <div class="big"><span id="totalCarbs">0</span><small>g carbs</small></div>
+        <div class="sub"><span id="totalWeight">0</span>g of ingredients</div>
+        <hr>
+        <div class="pair"><span>Per serving</span><b><span id="perServing">&ndash;</span><small style="font-size:0.9rem">g</small></b></div>
+        <div class="sub" id="perServingNote">Add the number of servings below</div>
+      </div>
+
+      <div class="card opt">
+        <h3>Servings</h3>
+        <p class="hint">How many portions does this recipe make?</p>
+        <label class="f" for="servings">Number of servings</label>
+        <input class="in" id="servings" type="number" min="0" step="1" inputmode="numeric" placeholder="e.g. 4">
+      </div>
+
+      <div class="card opt">
+        <h3>Weigh a portion</h3>
+        <p class="hint">Useful when portions aren't equal. Cooking changes the weight, so weigh the finished dish, then weigh what goes on the plate.</p>
+        <div class="grp">
+          <label class="f" for="cookedWeight">Finished dish weight (g)</label>
+          <input class="in" id="cookedWeight" type="number" min="0" step="any" inputmode="decimal" placeholder="Defaults to ingredient weight">
+        </div>
+        <div class="grp">
+          <label class="f" for="portionWeight">Portion weight (g)</label>
+          <input class="in" id="portionWeight" type="number" min="0" step="any" inputmode="decimal" placeholder="e.g. 120">
+        </div>
+        <div class="result"><span>Carbs per 100g cooked</span><b id="per100">&ndash;</b></div>
+        <div class="result"><span>Carbs in this portion</span><b id="portionCarbs">&ndash;</b></div>
+      </div>
+    </aside>
+  </div>
+
+  <section class="saved narrow" style="max-width:none;">
+    <h2 class="section-head">Saved recipes</h2>
+    <p class="lede" style="font-size:0.9rem; margin-bottom:1rem;">Saved in this browser on this device only.</p>
+    <ul class="saved-list" id="savedList"></ul>
+  </section>
+
+  <div class="callout narrow" style="max-width:none; margin-top:2.5rem;">
+    <p>Carb values on packets and in databases are a guide, and every recipe varies. Always check with your diabetes team about how to dose.</p>
+  </div>
+</div>
+<footer class="site-footer" id="siteFooter"></footer>
+<script src="/assets/site.js"></script>
+<script>
+  const STORE_KEY = 'kylo-carb-recipes-v1';
+  const DRAFT_KEY = 'kylo-carb-draft-v1';
+  const $ = (id) => document.getElementById(id);
+  const rowsEl = $('rows');
+
+  const num = (v) => { const n = parseFloat(v); return isFinite(n) && n >= 0 ? n : 0; };
+  const fmt = (n) => (Math.round(n * 10) / 10).toLocaleString(undefined, { maximumFractionDigits: 1 });
+  const esc = (s) => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+  function addRow(data = {}) {
+    const row = document.createElement('div');
+    row.className = 'row';
+    row.innerHTML = `
+      <div class="c-name"><span class="mlabel">Ingredient</span><input class="in" data-k="name" type="text" placeholder="e.g. Plain flour" value="${esc(data.name)}" aria-label="Ingredient"></div>
+      <div class="c-w"><span class="mlabel">Weight (g)</span><input class="in" data-k="weight" type="number" min="0" step="any" inputmode="decimal" placeholder="0" value="${esc(data.weight)}" aria-label="Weight in grams"></div>
+      <div class="c-100"><span class="mlabel">Carbs per 100g</span><input class="in" data-k="per100" type="number" min="0" step="any" inputmode="decimal" placeholder="0" value="${esc(data.per100)}" aria-label="Carbs per 100g"></div>
+      <div class="carbs"><span class="mlabel" style="display:inline">Carbs: </span><span class="v">0</span><small>g</small></div>
+      <button class="del" type="button" aria-label="Remove ingredient">&times;</button>`;
+    row.querySelector('.del').addEventListener('click', () => {
+      row.remove();
+      if (!rowsEl.children.length) addRow();
+      recalc();
+    });
+    rowsEl.appendChild(row);
+    return row;
+  }
+
+  function readRecipe() {
+    return {
+      name: $('recipeName').value.trim(),
+      servings: $('servings').value,
+      cookedWeight: $('cookedWeight').value,
+      portionWeight: $('portionWeight').value,
+      ingredients: [...rowsEl.children].map(r => ({
+        name: r.querySelector('[data-k="name"]').value.trim(),
+        weight: r.querySelector('[data-k="weight"]').value,
+        per100: r.querySelector('[data-k="per100"]').value,
+      })),
+    };
+  }
+
+  function calc(recipe) {
+    let totalWeight = 0, totalCarbs = 0;
+    const lines = recipe.ingredients.map(i => {
+      const w = num(i.weight), c = num(i.per100);
+      const carbs = w * c / 100;
+      totalWeight += w; totalCarbs += carbs;
+      return carbs;
+    });
+    const servings = num(recipe.servings);
+    const cooked = num(recipe.cookedWeight) || totalWeight;
+    const per100 = cooked > 0 ? totalCarbs / cooked * 100 : 0;
+    const portion = num(recipe.portionWeight);
+    return {
+      lines, totalWeight, totalCarbs,
+      perServing: servings > 0 ? totalCarbs / servings : null,
+      per100: cooked > 0 && totalCarbs > 0 ? per100 : null,
+      portionCarbs: portion > 0 && cooked > 0 && totalCarbs > 0 ? portion * per100 / 100 : null,
+      servings, cooked,
+    };
+  }
+
+  function recalc() {
+    const recipe = readRecipe();
+    const r = calc(recipe);
+    [...rowsEl.children].forEach((row, i) => { row.querySelector('.carbs .v').textContent = fmt(r.lines[i]); });
+    $('totalCarbs').textContent = fmt(r.totalCarbs);
+    $('totalWeight').textContent = fmt(r.totalWeight);
+    $('perServing').textContent = r.perServing === null ? '–' : fmt(r.perServing);
+    $('perServingNote').textContent = r.perServing === null ? 'Add the number of servings below' : `${fmt(r.servings)} serving${r.servings === 1 ? '' : 's'}`;
+    $('per100').textContent = r.per100 === null ? '–' : fmt(r.per100) + 'g';
+    $('portionCarbs').textContent = r.portionCarbs === null ? '–' : fmt(r.portionCarbs) + 'g';
+    try { localStorage.setItem(DRAFT_KEY, JSON.stringify(recipe)); } catch (e) {}
+  }
+
+  function loadRecipe(recipe) {
+    $('recipeName').value = recipe.name || '';
+    $('servings').value = recipe.servings || '';
+    $('cookedWeight').value = recipe.cookedWeight || '';
+    $('portionWeight').value = recipe.portionWeight || '';
+    rowsEl.innerHTML = '';
+    (recipe.ingredients && recipe.ingredients.length ? recipe.ingredients : [{}, {}, {}]).forEach(addRow);
+    recalc();
+  }
+
+  // ---- Saved recipes (this browser only) ----
+  function getSaved() { try { return JSON.parse(localStorage.getItem(STORE_KEY)) || []; } catch (e) { return []; } }
+  function setSaved(list) { try { localStorage.setItem(STORE_KEY, JSON.stringify(list)); return true; } catch (e) { return false; } }
+
+  function renderSaved() {
+    const list = getSaved();
+    const el = $('savedList');
+    if (!list.length) { el.innerHTML = '<li class="meta" style="color:var(--ink-soft)">Nothing saved yet.</li>'; return; }
+    el.innerHTML = list.map((rec, i) => {
+      const r = calc(rec);
+      return `<li>
+        <div><div class="nm">${esc(rec.name || 'Untitled recipe')}</div>
+        <div class="meta">${fmt(r.totalCarbs)}g carbs total${r.perServing !== null ? ` &middot; ${fmt(r.perServing)}g per serving` : ''}</div></div>
+        <div class="acts"><button data-load="${i}">Open</button><button data-del="${i}">Delete</button></div>
+      </li>`;
+    }).join('');
+    el.querySelectorAll('[data-load]').forEach(b => b.addEventListener('click', () => {
+      loadRecipe(getSaved()[b.dataset.load]); window.scrollTo({ top: 0, behavior: 'smooth' }); flash('Recipe opened.');
+    }));
+    el.querySelectorAll('[data-del]').forEach(b => b.addEventListener('click', () => {
+      const all = getSaved(); all.splice(b.dataset.del, 1); setSaved(all); renderSaved();
+    }));
+  }
+
+  let flashTimer;
+  function flash(msg) { $('status').textContent = msg; clearTimeout(flashTimer); flashTimer = setTimeout(() => $('status').textContent = '', 3000); }
+
+  $('saveBtn').addEventListener('click', () => {
+    const recipe = readRecipe();
+    recipe.ingredients = recipe.ingredients.filter(i => i.name || i.weight || i.per100);
+    if (!recipe.ingredients.length) { flash('Add at least one ingredient first.'); return; }
+    if (!recipe.name) { $('recipeName').focus(); flash('Give the recipe a name so you can find it later.'); return; }
+    const all = getSaved();
+    const existing = all.findIndex(r => (r.name || '').toLowerCase() === recipe.name.toLowerCase());
+    if (existing >= 0) all[existing] = recipe; else all.unshift(recipe);
+    flash(setSaved(all) ? (existing >= 0 ? 'Recipe updated.' : 'Recipe saved.') : 'Couldn’t save in this browser.');
+    renderSaved();
+  });
+
+  $('copyBtn').addEventListener('click', async () => {
+    const rec = readRecipe(), r = calc(rec);
+    const lines = [rec.name || 'Recipe', ''];
+    rec.ingredients.forEach((i, n) => { if (i.name || num(i.weight)) lines.push(`${i.name || 'Ingredient'}: ${fmt(num(i.weight))}g (${fmt(r.lines[n])}g carbs)`); });
+    lines.push('', `Total: ${fmt(r.totalCarbs)}g carbs`);
+    if (r.perServing !== null) lines.push(`Per serving (${fmt(r.servings)}): ${fmt(r.perServing)}g carbs`);
+    if (r.per100 !== null) lines.push(`Per 100g cooked: ${fmt(r.per100)}g carbs`);
+    try { await navigator.clipboard.writeText(lines.join('\n')); flash('Summary copied.'); } catch (e) { flash('Couldn’t copy in this browser.'); }
+  });
+
+  $('printBtn').addEventListener('click', () => window.print());
+  $('clearBtn').addEventListener('click', () => { loadRecipe({}); flash('Cleared.'); });
+  $('addRow').addEventListener('click', () => { addRow().querySelector('input').focus(); });
+
+  document.addEventListener('input', (e) => { if (e.target.matches('input.in')) recalc(); });
+
+  // Pick up where you left off
+  let draft = null;
+  try { draft = JSON.parse(localStorage.getItem(DRAFT_KEY)); } catch (e) {}
+  loadRecipe(draft || {});
+  renderSaved();
+</script>
+</body>
+</html>

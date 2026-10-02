@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Kylo's story — Kylo Loki</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;1,9..144,500&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/site.css">
+<style>
+  /* Placeholder until the full story is written — swap the .soon block for the story itself. */
+  .soon { display: grid; grid-template-columns: 1fr 220px; gap: 2rem; align-items: end; overflow: hidden; padding-bottom: 0; }
+  .soon .txt { padding-bottom: clamp(1.2rem, 3vw, 1.75rem); }
+  .soon p { color: var(--ink-soft); margin: 0 0 1.2rem; }
+  .soon .actions { display: flex; gap: 0.6rem; flex-wrap: wrap; }
+  .soon .pic { position: relative; }
+  .soon .pic::before { content: ""; position: absolute; left: 6%; right: 6%; bottom: 0; height: 72%; background: var(--blue-pale); border-radius: 50% 50% 0 0 / 60% 60% 0 0; }
+  .soon .pic img { position: relative; width: 100%; height: auto; }
+  @media (max-width: 600px) {
+    .soon { grid-template-columns: 1fr; gap: 0; }
+    .soon .pic { width: 170px; margin: 0 auto; order: 2; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="site-nav" id="siteNav"></header>
+
+  <div class="narrow">
+    <header class="page-head">
+      <span class="eyebrow">Kylo's story</span>
+      <h1>The full story, <em>from the beginning</em></h1>
+      <p class="lede">The holiday, the hospital visits, the journey home and the diagnosis that changed everything.</p>
+    </header>
+
+    <section class="card soon">
+      <div class="txt">
+        <span class="eyebrow">Coming soon</span>
+        <p>We're still writing this one, and it deserves to be told properly, with the photos to go with it. Check back soon.</p>
+        <p>In the meantime, you can hear the story told on the Juicebox Podcast.</p>
+        <div class="actions">
+          <a class="btn" href="/podcast/">Listen to the episode</a>
+          <a class="btn ghost" href="/archive/">Read the journal</a>
+        </div>
+      </div>
+      <div class="pic"><img src="/images/cap.png" alt="Kylo in a blue cap, splashing in a water fountain" width="471" height="686"></div>
+    </section>
+  </div>
+</div>
+<footer class="site-footer" id="siteFooter"></footer>
+<script src="/assets/site.js"></script>
+</body>
+</html>

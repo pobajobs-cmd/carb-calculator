@@ -3,72 +3,33 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Post — Kylo's Journey</title>
+<title>Journal — Kylo Loki</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/site.css">
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <style>
-  :root {
-    box-sizing: border-box;
-    padding-top: env(safe-area-inset-top, 0px);
-    padding-bottom: env(safe-area-inset-bottom, 0px);
-    --paper: #EDF1F3; --paper-tint: #E1E8EB; --card: #F8FBFC;
-    --ink: #202B33; --ink-soft: #58666F;
-    --blue: #3E6E88; --blue-deep: #2C5064; --gold: #BE8A3E; --line: #C9D6DB;
-    --font-display: 'Fraunces', Georgia, serif;
-    --font-body: 'Work Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  }
-  @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) {
-      --paper: #16212A; --paper-tint: #1D2B35; --card: #1B2830;
-      --ink: #E7EEF1; --ink-soft: #A8B8C0;
-      --blue: #7FAFC7; --blue-deep: #5A8CA6; --gold: #DBAA5C; --line: #2E3F49;
-    }
-  }
-  html, body { height: 100%; }
-  * { box-sizing: border-box; }
-  body {
-    margin: 0; background: var(--paper); color: var(--ink);
-    font-family: var(--font-body); font-size: 17px; line-height: 1.65;
-    -webkit-font-smoothing: antialiased;
-  }
-  a { color: var(--blue-deep); }
-  .wrap { max-width: 640px; margin: 0 auto; padding: 0 1.5rem 3rem; }
-
-  .site-nav { display: flex; justify-content: space-between; align-items: center; padding: 1.25rem 0; }
-  .site-nav .brand { font-family: var(--font-display); font-weight: 500; font-size: 1.1rem; text-decoration: none; color: var(--ink); }
-  .site-nav nav a { text-decoration: none; font-size: 0.88rem; font-weight: 600; color: var(--ink-soft); }
-  .site-nav nav a:hover { color: var(--ink); }
-
-  header.post { padding: 0.25rem 0 1.5rem; border-bottom: 1px solid var(--line); margin-bottom: 1.75rem; }
+  header.post { padding: clamp(1.5rem, 5vw, 3rem) 0 1.5rem; border-bottom: 1px solid var(--line); margin-bottom: 1.75rem; }
   .post-date { font-size: 0.82rem; color: var(--gold); font-weight: 600; margin-bottom: 0.4rem; }
-  header.post h1 { font-family: var(--font-display); font-weight: 500; font-size: clamp(1.6rem, 5vw, 2.2rem); line-height: 1.15; margin: 0; }
-
-  .video-wrap { position: relative; width: 100%; aspect-ratio: 16/9; border-radius: 8px; overflow: hidden; background: var(--paper-tint); margin-bottom: 1.75rem; }
+  header.post h1 { font-family: var(--font-display); font-weight: 500; font-size: clamp(1.8rem, 1.3rem + 2.4vw, 2.6rem); line-height: 1.15; margin: 0; text-wrap: balance; }
+  .video-wrap { position: relative; width: 100%; aspect-ratio: 16/9; border-radius: var(--radius); overflow: hidden; background: var(--paper-tint); margin-bottom: 1.75rem; }
   .video-wrap iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
-
-  .post-body p { margin: 0 0 1.1rem; font-size: 1.02rem; }
-  .post-body img { max-width: 100%; border-radius: 8px; display: block; margin: 1.5rem 0; }
-  .post-body h1, .post-body h2, .post-body h3 { font-family: var(--font-display); font-weight: 500; }
-  .post-body a { text-decoration: underline; text-decoration-color: var(--line); text-underline-offset: 2px; }
-
-  .empty, .loading { color: var(--ink-soft); font-size: 0.95rem; padding: 2rem 0; }
+  .prose img { max-width: 100%; border-radius: 12px; margin: 1.5rem 0; }
+  .back { display: inline-block; margin-top: 2rem; font-size: 0.9rem; font-weight: 600; text-decoration: none; color: var(--ink-soft); }
+  .back:hover { color: var(--ink); }
 </style>
 </head>
 <body>
-
 <div class="wrap">
-  <header class="site-nav">
-    <a class="brand" href="/">Kylo's Journey</a>
-    <nav><a href="/archive/">All posts</a></nav>
-  </header>
-
-  <div id="postRoot">
-    <p class="loading">Loading&hellip;</p>
+  <header class="site-nav" id="siteNav"></header>
+  <div class="narrow">
+    <div id="postRoot"><p class="loading">Loading&hellip;</p></div>
+    <a class="back" href="/archive/">&larr; All posts</a>
   </div>
 </div>
-
+<footer class="site-footer" id="siteFooter"></footer>
+<script src="/assets/site.js"></script>
 <script src="/assets/journal.js"></script>
 <script>
   const slug = new URLSearchParams(location.search).get('slug');
@@ -79,19 +40,20 @@
   } else {
     fetchPost(slug).then(post => {
       const id = youTubeId(post.video);
+      document.title = post.title + ' — Kylo Loki';
       root.innerHTML = `
         <header class="post">
-          <div class="post-date">${fmtPostDate(post.date)}</div>
+          <div class="post-date">${post.placeholder ? '<span class="badge-ph">Example post</span>' : fmtPostDate(post.date)}</div>
           <h1>${post.title}</h1>
+          ${post.placeholder ? '<div class="ph-banner"><span>&#9998;</span><span><strong>This is a placeholder.</strong> It shows how journal posts will look. Our first real post is coming soon.</span></div>' : ''}
         </header>
         ${id ? `<div class="video-wrap"><iframe src="https://www.youtube.com/embed/${id}" title="${post.title}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>` : ''}
-        <div class="post-body">${marked.parse(post.body || '')}</div>
+        <div class="prose">${marked.parse(post.body || '')}</div>
       `;
     }).catch(() => {
-      root.innerHTML = '<p class="empty">Couldn\u2019t find that post \u2014 it may have been moved or renamed.</p>';
+      root.innerHTML = '<p class="empty">Couldn’t find that post — it may have been moved or renamed.</p>';
     });
   }
 </script>
-
 </body>
 </html>
