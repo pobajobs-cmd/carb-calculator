@@ -8,7 +8,6 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;1,9..144,500&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet">
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Runic&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/site.css">
 <style>
   /* ---------- Hero ---------- */
@@ -24,68 +23,35 @@
   .hero h1 em { font-style: italic; color: var(--blue); }
   .hero p { color: var(--ink-soft); margin: 0; font-size: 1.02rem; max-width: 34em; }
 
-  :root { --shield: #1E9DB8; --shield-soft: rgba(30, 157, 184, 0.35); }
-  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --shield: #8FE3F4; --shield-soft: rgba(143, 227, 244, 0.35); } }
-  :root[data-theme="dark"] { --shield: #8FE3F4; --shield-soft: rgba(143, 227, 244, 0.35); }
-  /* ---------- Homepage photo: blue circle, runes, Earth & Moon, hidden shield ----------
-     Blue circle: the worldwide diabetes awareness symbol.
-     Runes (Elder Futhark) spell KYLO · LOKI · LLOYD round the ring. Tap: they glow gold.
-     Earth and Moon: true size ratio (Moon = 27% of Earth's width) and true timing (Moon laps
-     Earth 13.37 times per orbit). The distance is squashed: at true scale the Moon would be
-     about 30 Earth-widths away, off the edge of the screen.
-     Tap the photo 5 times quickly: energy shield easter egg. */
-  .portrait { position: relative; width: 100%; max-width: 420px; justify-self: center; aspect-ratio: 1 / 1.02;
-    cursor: pointer; -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none; outline: none; }
-  .portrait:focus-visible { outline: 2px solid var(--gold); outline-offset: 6px; border-radius: 50%; }
-  .portrait .orbit-art { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
-  .portrait .bc-ring { fill: none; stroke: #2E7BC4; stroke-width: 34; }
-  .portrait .breathe { transform-box: view-box; transform-origin: 200px 222px; animation: breathe 6s ease-in-out infinite; }
-  .portrait .runes { font-family: 'Noto Sans Runic', 'Segoe UI Historic', serif; font-size: 19px; fill: #1B4F80;
-    dominant-baseline: central; transition: fill 0.5s ease, filter 0.5s ease; }
-  .portrait.glow .runes { fill: #FFD877; filter: drop-shadow(0 0 2px #FFB938) drop-shadow(0 0 6px rgba(255, 185, 56, 0.8)); transition-duration: 0.15s; }
-  .portrait .earth-orbit { fill: none; stroke: var(--line); stroke-width: 1; stroke-dasharray: 2 5; }
-  .portrait .earth-path { transform-box: view-box; transform-origin: 200px 222px; animation: orbit 60s linear infinite; }
-  .portrait .moon-path { transform-box: view-box; transform-origin: 200px 32px; animation: orbit 4.488s linear infinite; }
-  @keyframes orbit { to { transform: rotate(-360deg); } }
-  @keyframes breathe { 50% { transform: scale(1.025); } }
+  .portrait { position: relative; width: 100%; max-width: 420px; justify-self: center; aspect-ratio: 1 / 1.02; }
+  .portrait .blob {
+    position: absolute; inset: 8% 2% 0 6%;
+    background: linear-gradient(150deg, var(--blue) 0%, var(--blue-deep) 100%);
+    border-radius: 58% 42% 46% 54% / 52% 48% 52% 48%;
+    animation: morph 14s ease-in-out infinite alternate;
+  }
+  .portrait .ring {
+    position: absolute; inset: 0 8% 6% 0;
+    border: 2px solid var(--gold); border-radius: 45% 55% 52% 48% / 50% 46% 54% 50%; opacity: 0.6;
+    animation: morph 18s ease-in-out infinite alternate-reverse;
+  }
+  .portrait .dot { position: absolute; border-radius: 50%; background: var(--gold); }
+  .portrait .dot.a { width: 14px; height: 14px; top: 6%; right: 10%; }
+  .portrait .dot.b { width: 9px; height: 9px; bottom: 14%; left: 0; background: var(--blue); }
   .portrait img {
     position: absolute; left: 50%; bottom: 0; transform: translateX(-50%);
-    width: 88%; height: auto; filter: drop-shadow(0 18px 24px rgba(20, 40, 55, 0.25));
+    width: 96%; height: auto; filter: drop-shadow(0 18px 24px rgba(20, 40, 55, 0.25));
     -webkit-mask-image: linear-gradient(to bottom, #000 78%, transparent 100%);
             mask-image: linear-gradient(to bottom, #000 78%, transparent 100%);
-    pointer-events: none;
   }
-
-  /* Easter egg: energy shield (hidden until 5 quick taps) */
-  .portrait .shield { position: absolute; inset: 0; z-index: 3; pointer-events: none; opacity: 0; transition: opacity 0.35s ease; }
-  .portrait.shield-on .shield { opacity: 1; }
-  .portrait .shield .hud i { position: absolute; width: 22px; height: 22px; border: 2px solid var(--shield); }
-  .portrait .shield .hud i:nth-child(1) { top: 2%; left: 2%; border-right: 0; border-bottom: 0; }
-  .portrait .shield .hud i:nth-child(2) { top: 2%; right: 2%; border-left: 0; border-bottom: 0; }
-  .portrait .shield .hud i:nth-child(3) { bottom: 2%; left: 2%; border-right: 0; border-top: 0; }
-  .portrait .shield .hud i:nth-child(4) { bottom: 2%; right: 2%; border-left: 0; border-top: 0; }
-  .portrait .shield .bubble { position: absolute; left: 13%; width: 74%; top: 14%; aspect-ratio: 1 / 1.06; border-radius: 50%;
-    box-shadow: inset 0 0 26px var(--shield-soft), 0 0 18px var(--shield-soft); overflow: hidden; }
-  .portrait .shield .hex { position: absolute; inset: 0; opacity: 0.6;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='48.5' viewBox='0 0 28 48.5'%3E%3Cpath d='M14 0 L28 8.08 L28 24.25 L14 32.33 L0 24.25 L0 8.08 Z M14 32.33 L14 48.5' fill='none' stroke='%236FD3E8' stroke-width='1.2'/%3E%3C/svg%3E");
-    background-size: 22px auto; }
-  .portrait.shield-on .shield .bubble { animation: shieldHit 1s steps(1) 0.35s 1; }
-  .portrait.shield-on .shield .hex { animation: shieldFlicker 1s linear 0.35s 1 both, shieldSweep 2.4s ease-in-out 1.4s 1 both; }
-  .portrait .shield .meter { position: absolute; left: 50%; bottom: 7%; transform: translateX(-50%); width: 44%; height: 9px;
-    border: 1.5px solid var(--shield); border-radius: 2px; padding: 1px; }
-  .portrait .shield .meter b { display: block; height: 100%; background: var(--shield); transform-origin: left; transform: scaleX(1); }
-  .portrait.shield-on .shield .meter b { animation: shieldRecharge 2.6s ease-in 0.35s 1 both; }
-  @keyframes shieldHit { 0% { box-shadow: inset 0 0 60px rgba(255, 196, 100, 0.9), 0 0 40px rgba(255, 196, 100, 0.7); } 30% { box-shadow: inset 0 0 16px var(--shield-soft); } 45% { box-shadow: inset 0 0 50px rgba(255, 196, 100, 0.7); } 70%, 100% { box-shadow: inset 0 0 26px var(--shield-soft), 0 0 18px var(--shield-soft); } }
-  @keyframes shieldFlicker { 0%, 20%, 40% { opacity: 1; } 10%, 30%, 55% { opacity: 0.1; } 100% { opacity: 0.15; } }
-  @keyframes shieldSweep { 0% { opacity: 0.15; } 50% { opacity: 0.7; } 100% { opacity: 0.55; } }
-  @keyframes shieldRecharge { 0%, 35% { transform: scaleX(0); background: #F2B15A; } 100% { transform: scaleX(1); } }
-
-  @media (prefers-reduced-motion: reduce) {
-    .portrait .breathe, .portrait .earth-path, .portrait .moon-path { animation: none; }
+  @keyframes morph {
+    0%   { border-radius: 58% 42% 46% 54% / 52% 48% 52% 48%; }
+    100% { border-radius: 44% 56% 58% 42% / 46% 56% 44% 54%; }
   }
+  @media (prefers-reduced-motion: reduce) { .portrait .blob, .portrait .ring { animation: none; } }
 
   /* ---------- Story blocks ---------- */
-  .story { display: flex; flex-direction: column; gap: clamp(4rem, 8vw, 5rem); margin-bottom: clamp(3rem, 7vw, 5rem); }
+  .story { display: flex; flex-direction: column; gap: clamp(3rem, 7vw, 4.5rem); margin-bottom: clamp(3rem, 7vw, 5rem); }
   .chapter {
     position: relative; background: var(--card); border: 1px solid var(--line); border-radius: 18px;
     padding: clamp(1.4rem, 3.5vw, 2.25rem);
@@ -194,7 +160,7 @@
   @media (max-width: 560px) {
     .hero .portrait { max-width: 250px; }
     .hero p { font-size: 0.98rem; text-align: left; }
-    .story { gap: 5.5rem; margin-top: 3.5rem; } /* room for the photos that pop out of each card */
+    .story { gap: 4.5rem; margin-top: 1rem; }
     .chapter, .chapter.flip { grid-template-columns: 1fr; padding-top: 0; text-align: left; }
     .chapter .cutout, .chapter.flip .cutout { order: -1; width: 150px; margin: -4.5rem auto 0; align-self: center; }
     .cutout img { max-height: 200px; }
@@ -219,30 +185,11 @@
       <h1>This is the story of <em>Kylo Loki</em> and his journey with Type One Diabetes.</h1>
       <p>Kylo was diagnosed with Type One Diabetes (T1D) when he was 15 months old, after going into Diabetic KetoAcidosis (DKA) during a family holiday, resulting in a harrowing journey back to the UK, all the while Kylo was fighting for his life. </p>
     </div>
-    <div class="portrait" id="kyloPortrait" role="button" tabindex="0" aria-label="Photo of Kylo. Tap to light up the runes.">
-      <svg class="orbit-art" viewBox="0 0 400 408" aria-hidden="true">
-        <defs>
-          <path id="runePath" d="M200,222 m-150,0 a150,150 0 1,1 300,0 a150,150 0 1,1 -300,0"/>
-          <radialGradient id="earthFill" cx="35%" cy="35%" r="70%"><stop offset="0" stop-color="#7FC3F0"/><stop offset="0.55" stop-color="#2E7BC4"/><stop offset="1" stop-color="#1B4F80"/></radialGradient>
-          <radialGradient id="moonFill" cx="35%" cy="35%" r="70%"><stop offset="0" stop-color="#F2F2F2"/><stop offset="1" stop-color="#9AA3A8"/></radialGradient>
-        </defs>
-        <circle class="earth-orbit" cx="200" cy="222" r="190"/>
-        <g class="breathe">
-          <circle class="bc-ring" cx="200" cy="222" r="150"/>
-          <text class="runes"><textPath href="#runePath" textLength="930" lengthAdjust="spacing">ᚲᛃᛚᛟ ᛫ ᛚᛟᚲᛁ ᛫ ᛚᛚᛟᛃᛞ ᛫ ᚲᛃᛚᛟ ᛫ ᛚᛟᚲᛁ ᛫ ᛚᛚᛟᛃᛞ ᛫ ᚲᛃᛚᛟ ᛫ ᛚᛟᚲᛁ ᛫ ᛚᛚᛟᛃᛞ ᛫ </textPath></text>
-        </g>
-        <g class="earth-path">
-          <circle cx="200" cy="32" r="9" fill="url(#earthFill)"/>
-          <path d="M195 28 q4 -4 8 0 q-3 4 -8 0z M199 36 q4 -1 5 3 q-4 1 -5 -3z" fill="#4FA36B" opacity="0.85"/>
-          <g class="moon-path"><circle cx="200" cy="8" r="2.45" fill="url(#moonFill)"/></g>
-        </g>
-      </svg>
+    <div class="portrait">
+      <span class="ring"></span>
+      <span class="blob"></span>
+      <span class="dot a"></span><span class="dot b"></span>
       <img src="/images/sunglasses.png" alt="Kylo grinning in a pair of oversized aviator sunglasses" width="714" height="741" fetchpriority="high">
-      <div class="shield" aria-hidden="true">
-        <div class="hud"><i></i><i></i><i></i><i></i></div>
-        <div class="bubble"><div class="hex"></div></div>
-        <div class="meter"><b></b></div>
-      </div>
     </div>
   </section>
 
@@ -352,28 +299,6 @@
       ${posts.length > 1 ? `<a class="archive-link" href="/archive/">View all posts</a>` : ''}
     `;
   });
-</script>
-
-<script>
-  // Homepage photo: one tap lights the runes gold, five quick taps raise the energy shield.
-  (function () {
-    const p = document.getElementById('kyloPortrait');
-    if (!p) return;
-    let taps = 0, tapTimer, glowTimer, shieldTimer;
-    function restart(cls) { p.classList.remove(cls); void p.offsetWidth; p.classList.add(cls); }
-    function tap() {
-      restart('glow');
-      clearTimeout(glowTimer); glowTimer = setTimeout(() => p.classList.remove('glow'), 2200);
-      taps++; clearTimeout(tapTimer); tapTimer = setTimeout(() => { taps = 0; }, 1200);
-      if (taps >= 5) {
-        taps = 0;
-        restart('shield-on');
-        clearTimeout(shieldTimer); shieldTimer = setTimeout(() => p.classList.remove('shield-on'), 4600);
-      }
-    }
-    p.addEventListener('click', tap);
-    p.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); tap(); } });
-  })();
 </script>
 
 </body>

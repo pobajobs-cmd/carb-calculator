@@ -253,21 +253,21 @@
 
   // ---- State + persistence (per-device only, this browser) ----
   let entries = [];
-  // Starts empty. Anything logged under the old demo version is carried over, minus the demo entries.
-  const STORE = 'kylo-calendar-entries-v1';
+  function seed() {
+    entries = [
+      { id: 'seed-1', type: 'pump',        date: toStr(addDays(today, -1)),  notes: '' },
+      { id: 'seed-2', type: 'sensor',      date: toStr(addDays(today, -4)),  notes: '' },
+      { id: 'seed-3', type: 'transmitter', date: toStr(addDays(today, -27)), notes: '' },
+      { id: 'seed-4', type: 'pen',         date: toStr(addDays(today, -9)),  notes: '' },
+    ];
+  }
   try {
-    const raw = localStorage.getItem(STORE);
-    if (raw) entries = JSON.parse(raw);
-    else {
-      const old = localStorage.getItem('kylo-calendar-entries-demo-v2');
-      entries = old ? JSON.parse(old).filter(e => !String(e.id).startsWith('seed-')) : [];
-      localStorage.setItem(STORE, JSON.stringify(entries));
-      localStorage.removeItem('kylo-calendar-entries-demo-v2');
-    }
-  } catch (e) { entries = []; }
+    const raw = localStorage.getItem('kylo-calendar-entries-demo-v2');
+    entries = raw ? JSON.parse(raw) : (seed(), entries);
+  } catch (e) { seed(); }
 
   function save() {
-    try { localStorage.setItem(STORE, JSON.stringify(entries)); } catch (e) {}
+    try { localStorage.setItem('kylo-calendar-entries-demo-v2', JSON.stringify(entries)); } catch (e) {}
   }
   function entryById(id) { return entries.find(e => e.id === id); }
 
