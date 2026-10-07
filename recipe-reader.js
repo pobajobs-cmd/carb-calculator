@@ -29,7 +29,8 @@ export async function handleRecipe(request) {
       },
     });
     clearTimeout(timer);
-    if (!res.ok) return reply({ error: `That website said no (error ${res.status}). Some sites block this — try another recipe, or enter it by hand.` }, 502);
+    if (res.status === 404 || res.status === 410) return reply({ error: 'That page doesn’t exist. Check the link is copied in full.' }, 502);
+    if (!res.ok) return reply({ error: `That website wouldn’t let us read the page (error ${res.status}). Some sites block this — try another recipe, or enter it by hand.` }, 502);
     html = (await res.text()).slice(0, MAX_BYTES);
   } catch (e) {
     return reply({ error: 'Couldn’t reach that page. Check the link and try again.' }, 502);
