@@ -1,0 +1,41 @@
+// Cloudflare settings for kyloloki.com (the Worker is called "carb-calculator" after the repo).
+// Cloudflare reads this file every time you push to GitHub.
+{
+  "$schema": "https://unpkg.com/wrangler/config-schema.json",
+  "name": "carb-calculator",
+  "main": "worker.js",
+  "compatibility_date": "2026-10-01",
+
+  // The website files. Everything in the repo is served as-is, apart from what's listed
+  // in .assetsignore. Only /api/... addresses go to worker.js first.
+  "assets": {
+    "directory": "./",
+    "binding": "ASSETS",
+    "run_worker_first": ["/api/*"]
+  },
+
+  // The shared family calendar's database.
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "kyloloki-family",
+      "database_id": "877d7934-ff14-42ef-bc08-3959082fc134"
+    }
+  ],
+
+  "vars": {
+    // Cloudflare Access (the family login). The Worker uses these to check sign-ins.
+    "ACCESS_TEAM_DOMAIN": "https://kyloloki.cloudflareaccess.com",
+    "ACCESS_AUD": "cff3591565fa5bc7c7f9df23bda76c099957f25a0aa47b360e2f0db742df628e",
+
+    // Names shown next to each logged change ("Logged by Jade"). Edit freely.
+    "FAMILY_NAMES": {
+      "pobajobs@hotmail.co.uk": "Tom",
+      "jadeappleton95@gmail.com": "Jade",
+      "dianecritchlow@me.com": "Diane",
+      "kylolokikll@gmail.com": "Kylo Loki"
+    }
+  },
+
+  "observability": { "enabled": true }
+}

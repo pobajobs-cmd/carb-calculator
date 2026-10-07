@@ -1,0 +1,4 @@
+# Local testing files — never upload these
+.dev.vars
+.wrangler
+node_modules

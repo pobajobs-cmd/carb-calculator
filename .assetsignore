@@ -1,0 +1,15 @@
+# Files in the repo that should NOT be published on the website
+worker.js
+recipe-reader.js
+functions
+archived
+wrangler.jsonc
+.dev.vars
+.wrangler
+node_modules
+.pages.yml
+START-HERE.txt
+post-template.html
+.git
+.github
+.gitignore
