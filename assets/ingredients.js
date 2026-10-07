@@ -364,6 +364,10 @@ function parseIngredientLine(raw) {
     }
   }
 
+  // Garnishes and "to serve" extras with no amount aren't counted (weight 0), just flagged
+  const servedOnSide = optional && grams === null;
+  if (servedOnSide) grams = 0;
+
   // Ingredients with no carbs don't need a weight to be right
   const zeroCarb = entry && entry.per100 === 0;
   let status;
@@ -371,13 +375,15 @@ function parseIngredientLine(raw) {
   else if (grams === null) status = zeroCarb ? 'ok' : 'check';
   else status = (how === 'g' || how === 'ml') && !entry.vary ? 'ok' : 'est';
   if (optional && status === 'ok' && !zeroCarb) status = 'est';
+  if (servedOnSide) status = 'est';
 
   const notes = [];
-  if (!entry) notes.push('ingredient not recognised — add carbs per 100g');
+  if (servedOnSide) notes.push('to serve / optional — not counted; add a weight if you’re using it');
+  else if (!entry) notes.push('ingredient not recognised — add carbs per 100g');
   else if (grams === null && !zeroCarb) notes.push('couldn’t work out the weight');
   else if (how && !['g', 'ml'].includes(how)) notes.push('weight estimated from ' + ({ cup: 'cups', tbsp: 'spoons', each: 'a typical size', tin: 'a standard tin', pinch: 'a pinch', handful: 'a handful', knob: 'a knob', splash: 'a splash', bunch: 'a bunch' }[how] || how));
   if (entry && entry.vary && entry.per100 > 0) notes.push('carbs vary by brand — check the packet');
-  if (optional) notes.push('listed as optional / to serve');
+  if (optional && !servedOnSide) notes.push('listed as optional / to serve');
 
   return {
     line,
@@ -400,7 +406,7 @@ function tidyName(line) {
     .replace(/^((x|tins?|cans?|packs?|packets?|bags?|jars?|large|medium|small|big|ripe|whole|heaped|level|slices?|rashers?|pinch(es)?|handfuls?|knobs?|splash(es)?|dash(es)?|bunch(es)?|sprigs?)\s+)+/i, '')
     .replace(/^(of\s+)/i, '')
     .replace(/\s+/g, ' ').trim();
-  n = n.split(/,\s*/)[0] || n;
+  n = n.split(/,\s*|\s+plus\s+|\s+\(/i)[0] || n;
   n = n.charAt(0).toUpperCase() + n.slice(1);
   return n.length > 60 ? n.slice(0, 57) + '…' : n;
 }
