@@ -135,6 +135,21 @@
   .type-toggle:has(input:checked) { color: var(--ink); border-color: var(--tc, var(--line)); }
   .type-toggle input { width: 14px; height: 14px; accent-color: var(--tc, var(--pen)); }
   .type-toggle .dot { width: 8px; height: 8px; border-radius: 50%; }
+
+  /* Shared-calendar status bars */
+  .sync { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; flex-wrap: wrap;
+    font-size: 0.86rem; color: var(--ink-soft); background: var(--card); border: 1px solid var(--line);
+    border-radius: 10px; padding: 0.6rem 0.9rem; margin: -0.6rem 0 1.25rem; }
+  .sync .who { display: inline-flex; align-items: center; gap: 0.5rem; }
+  .sync .who::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--sensor); flex-shrink: 0; }
+  .sync.warn .who::before { background: var(--transmitter); }
+  .sync.busy .who::before { background: var(--line); }
+  .sync a, .sync button.link { color: var(--ink); font-weight: 600; font: inherit; font-weight: 600; background: none; border: none; padding: 0; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+  .sync.importer { border-color: var(--gold); }
+  .sync.importer .who::before { background: var(--gold); }
+  .sync .acts { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+  .sync .acts .btn { padding: 0.45rem 0.9rem; font-size: 0.82rem; }
+  .detail-sub .by { color: var(--ink); font-weight: 600; }
 </style>
 </head>
 <body>
@@ -151,6 +166,8 @@
       </div>
     </header>
     <p class="sub">Tap a day to see what's logged or forecast there, and to add a new change.</p>
+    <div class="sync busy" id="syncBar" role="status"><span class="who">Loading the family calendar&hellip;</span></div>
+    <div class="sync importer" id="importBar" hidden></div>
 
     <section class="card cal-card">
       <div class="cal-head">
@@ -251,34 +268,62 @@
 
   const today = new Date(); today.setHours(0,0,0,0);
 
-  // ---- State + persistence (per-device only, this browser) ----
+  // ---- State: the shared family calendar (worker.js -> /api/calendar) ----
+  // If the shared calendar can't be reached (not signed in, or the page is opened from a computer),
+  // it falls back to changes saved in this browser only, and says so at the top.
   let entries = [];
-  // Starts empty. Anything logged under the old demo version is carried over, minus the demo entries.
+  let shared = false, me = null;
   const STORE = 'kylo-calendar-entries-v1';
-  try {
-    const raw = localStorage.getItem(STORE);
-    if (raw) entries = JSON.parse(raw);
-    else {
-      const old = localStorage.getItem('kylo-calendar-entries-demo-v2');
-      entries = old ? JSON.parse(old).filter(e => !String(e.id).startsWith('seed-')) : [];
-      localStorage.setItem(STORE, JSON.stringify(entries));
-      localStorage.removeItem('kylo-calendar-entries-demo-v2');
-    }
-  } catch (e) { entries = []; }
 
-  function save() {
-    try { localStorage.setItem(STORE, JSON.stringify(entries)); } catch (e) {}
+  function loadLocal() {
+    try {
+      const raw = localStorage.getItem(STORE);
+      if (raw) return JSON.parse(raw);
+      const old = localStorage.getItem('kylo-calendar-entries-demo-v2');
+      return old ? JSON.parse(old).filter(e => !String(e.id).startsWith('seed-')) : [];
+    } catch (e) { return []; }
   }
+  function saveLocal() { try { localStorage.setItem(STORE, JSON.stringify(entries)); } catch (e) {} }
   function entryById(id) { return entries.find(e => e.id === id); }
 
-  function addEntry(entry) {
-    entry.id = 'e' + Date.now() + Math.random().toString(36).slice(2,6);
-    entries.push(entry);
-    save(); renderAll();
+  async function api(path, opts = {}) {
+    const res = await fetch('/api/calendar' + path, {
+      credentials: 'same-origin',
+      ...opts,
+      headers: opts.body ? { 'Content-Type': 'application/json' } : {},
+    });
+    const isJson = (res.headers.get('Content-Type') || '').includes('application/json');
+    const data = isJson ? await res.json() : null;
+    if (!res.ok || !data) { const err = new Error((data && data.error) || 'Couldn’t reach the family calendar.'); err.status = res.status; throw err; }
+    return data;
   }
-  function removeEntry(id) {
-    entries = entries.filter(e => e.id !== id);
-    save(); renderAll(); openModal(modalDateStr);
+
+  async function addEntry(entry) {
+    if (!shared) {
+      entry.id = 'e' + Date.now() + Math.random().toString(36).slice(2, 6);
+      entries.push(entry); saveLocal(); renderAll(); return;
+    }
+    try {
+      const data = await api('/entries', { method: 'POST', body: JSON.stringify(entry) });
+      entries.push(data.entry); renderAll();
+    } catch (e) { setSync('Couldn’t save that change: ' + esc(e.message) + ' Try again.', 'warn'); }
+  }
+  async function removeEntry(id) {
+    if (!shared) { entries = entries.filter(e => e.id !== id); saveLocal(); renderAll(); openModal(modalDateStr); return; }
+    try {
+      await api('/entries/' + encodeURIComponent(id), { method: 'DELETE' });
+      entries = entries.filter(e => e.id !== id); renderAll(); openModal(modalDateStr);
+    } catch (e) { setSync('Couldn’t remove that change: ' + esc(e.message), 'warn'); }
+  }
+
+  function esc(t) { return String(t ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
+  function setSync(html, kind) {
+    const bar = document.getElementById('syncBar');
+    bar.className = 'sync' + (kind ? ' ' + kind : '');
+    bar.innerHTML = html.startsWith('<') ? html : `<span class="who">${html}</span>`;
+  }
+  function showSharedStatus() {
+    setSync(`<span class="who">Shared family calendar &middot; signed in as&nbsp;<strong>${esc(me.name)}</strong></span><a href="/cdn-cgi/access/logout">Sign out</a>`);
   }
 
   // ---- Build a date -> [event] map. Each event carries enough to render full detail. ----
@@ -410,7 +455,7 @@
 
     if (ev.kind === 'actual') {
       const entry = entryById(ev.entryId);
-      sub = 'Logged ' + fmtFull(fromStr(entry.date));
+      sub = 'Logged ' + fmtFull(fromStr(entry.date)) + (entry.createdByName ? ` by <span class="by">${esc(entry.createdByName)}</span>` : '');
       if (entry.notes) note += `<div class="detail-note"><b>Notes:</b> ${entry.notes}</div>`;
       if (entry.earlyReason) note += `<div class="detail-note"><b>Reason for early change:</b> ${entry.earlyReason}</div>`;
     } else {
@@ -574,27 +619,88 @@
   document.getElementById('settingsClose').addEventListener('click', () => settingsOverlay.classList.remove('open'));
   settingsOverlay.addEventListener('click', (e) => { if (e.target === settingsOverlay) settingsOverlay.classList.remove('open'); });
 
-  document.getElementById('settingsSave').addEventListener('click', () => {
+  document.getElementById('settingsSave').addEventListener('click', async () => {
     const updated = {};
     Object.keys(TYPES).forEach(key => {
       const val = parseInt(document.getElementById('int-' + key).value, 10);
       if (val > 0) { TYPES[key].interval = val; updated[key] = val; }
     });
-    try { localStorage.setItem('kylo-calendar-settings-v1', JSON.stringify(updated)); } catch (e) {}
+    if (shared) {
+      try { applySettings((await api('/settings', { method: 'PUT', body: JSON.stringify(updated) })).settings); }
+      catch (e) { setSync('Couldn’t save settings: ' + esc(e.message), 'warn'); }
+    } else {
+      try { localStorage.setItem('kylo-calendar-settings-v1', JSON.stringify(updated)); } catch (e) {}
+    }
     settingsOverlay.classList.remove('open');
     renderAll();
   });
 
-  document.getElementById('settingsReset').addEventListener('click', () => {
+  document.getElementById('settingsReset').addEventListener('click', async () => {
     Object.keys(TYPES).forEach(key => { TYPES[key].interval = DEFAULT_INTERVALS[key]; });
-    try { localStorage.removeItem('kylo-calendar-settings-v1'); } catch (e) {}
+    if (shared) {
+      try { await api('/settings', { method: 'PUT', body: JSON.stringify({ reset: true }) }); }
+      catch (e) { setSync('Couldn’t reset settings: ' + esc(e.message), 'warn'); }
+    } else {
+      try { localStorage.removeItem('kylo-calendar-settings-v1'); } catch (e) {}
+    }
     renderIntervalFields();
     renderAll();
   });
 
+  // Shared settings override the defaults; anything not set falls back to the default.
+  function applySettings(settings) {
+    Object.keys(TYPES).forEach(key => {
+      const v = settings && settings[key];
+      TYPES[key].interval = v > 0 ? v : DEFAULT_INTERVALS[key];
+    });
+  }
+
   renderLegend();
   renderAll();
   renderExportToggles();
+  connect();
+
+  async function connect() {
+    try {
+      const data = await api('');
+      shared = true; me = data.me; entries = data.entries;
+      applySettings(data.settings);
+      showSharedStatus();
+      offerImport();
+    } catch (e) {
+      shared = false; entries = loadLocal();
+      setSync(e.status === 401
+        ? 'You’re not signed in, so this only shows changes saved on this device. <a href="/calendar/">Sign in</a>'
+        : 'Couldn’t reach the family calendar, so this only shows changes saved on this device.', 'warn');
+    }
+    renderAll();
+  }
+
+  // Pick up changes other people have made when you come back to the page.
+  document.addEventListener('visibilitychange', async () => {
+    if (document.visibilityState !== 'visible' || !shared) return;
+    try { const data = await api(''); entries = data.entries; applySettings(data.settings); renderAll(); } catch (e) {}
+  });
+
+  // Changes logged on this device before the calendar was shared can be copied across once.
+  function offerImport() {
+    const local = loadLocal();
+    const bar = document.getElementById('importBar');
+    if (!local.length) { bar.hidden = true; return; }
+    bar.hidden = false;
+    bar.innerHTML = `<span class="who">${local.length} change${local.length === 1 ? ' is' : 's are'} saved on this device from before the calendar was shared.</span>
+      <span class="acts"><button class="btn" id="importYes" type="button">Add to the family calendar</button><button class="btn ghost" id="importNo" type="button">Not now</button></span>`;
+    document.getElementById('importNo').onclick = () => { bar.hidden = true; };
+    document.getElementById('importYes').onclick = async () => {
+      try {
+        const res = await api('/import', { method: 'POST', body: JSON.stringify({ entries: local }) });
+        try { localStorage.removeItem(STORE); localStorage.removeItem('kylo-calendar-entries-demo-v2'); } catch (e) {}
+        const data = await api(''); entries = data.entries; renderAll();
+        bar.innerHTML = `<span class="who">Added ${res.added} change${res.added === 1 ? '' : 's'} to the family calendar.</span>`;
+        setTimeout(() => { bar.hidden = true; }, 4000);
+      } catch (e) { bar.innerHTML = `<span class="who">Couldn’t copy them across: ${esc(e.message)}</span>`; }
+    };
+  }
 
   // ---- Export (last N days, filtered by type) — a normal browser download ----
   function renderExportToggles() {
