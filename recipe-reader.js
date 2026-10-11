@@ -102,10 +102,11 @@ function readHtmlRecipe(html) {
   const micro = [], listed = [], microSteps = [], listedSteps = [];
   const stack = []; // {tag, ing, method, micro}
   let cur = null;   // {kind, depth, text}
+  let heading = null, afterMethodHeading = false; // text of the heading being read; whether we're under "Method"/"Instructions"
   const tagRe = /<(\/?)([a-zA-Z][a-zA-Z0-9-]*)([^>]*)>|([^<]+)/g;
   let m;
   while ((m = tagRe.exec(body))) {
-    if (m[4] !== undefined) { if (cur) cur.text += m[4]; continue; }
+    if (m[4] !== undefined) { if (cur) cur.text += m[4]; if (heading) heading.text += m[4]; continue; }
     const closing = m[1] === '/', tag = m[2].toLowerCase(), attrs = m[3] || '';
     if (!closing) {
       if (cur && (tag === 'br' || tag === 'p' || tag === 'div')) cur.text += ' ';
@@ -119,13 +120,13 @@ function readHtmlRecipe(html) {
       const parent = stack[stack.length - 1] || {};
       const saysIng = /ingredient/.test(cls), saysMethod = /method|instruction|direction|step/.test(cls);
       // A wrapper named for both ("ingredients-methods") marks neither
-      const node = { tag, ing: parent.ing || (saysIng && !saysMethod), method: parent.method || (saysMethod && !saysIng), stepList: parent.stepList || (prop === 'recipeinstructions' && (tag === 'ol' || tag === 'ul')) };
+      if (/^h[1-6]$/.test(tag)) { heading = { depth: stack.length + 1, text: '' }; afterMethodHeading = false; }
+      const node = { tag, ing: parent.ing || (saysIng && !saysMethod), method: parent.method || (saysMethod && !saysIng), stepList: parent.stepList || prop === 'recipeinstructions' };
       stack.push(node);
+      const inMethod = node.stepList || node.method || (afterMethodHeading && !node.ing);
       if (!cur && /^(recipeingredient|ingredients)$/.test(prop)) cur = { kind: 'micro', depth: stack.length, text: '' };
-      else if (!cur && prop === 'recipeinstructions' && tag !== 'ol' && tag !== 'ul') cur = { kind: 'microStep', depth: stack.length, text: '' };
-      else if (!cur && tag === 'li' && node.stepList) cur = { kind: 'microStep', depth: stack.length, text: '' };
       else if (!cur && tag === 'li' && node.ing && !node.method) cur = { kind: 'list', depth: stack.length, text: '' };
-      else if (!cur && tag === 'li' && node.method) cur = { kind: 'step', depth: stack.length, text: '' };
+      else if (!cur && (tag === 'li' || tag === 'p') && inMethod) cur = { kind: node.stepList ? 'microStep' : 'step', depth: stack.length, text: '' };
     } else {
       const i = stack.map(s => s.tag).lastIndexOf(tag);
       if (i >= 0) closeTo(i);
@@ -133,6 +134,10 @@ function readHtmlRecipe(html) {
   }
   function closeTo(i) {
     while (stack.length > i) {
+      if (heading && heading.depth === stack.length) {
+        afterMethodHeading = /^(method|instructions|directions|steps|preparation|how to make)\b/i.test(clean(heading.text));
+        heading = null;
+      }
       if (cur && cur.depth === stack.length) {
         const t = clean(cur.text);
         if (t) ({ micro, list: listed, microStep: microSteps, step: listedSteps })[cur.kind].push(t);
@@ -147,8 +152,7 @@ function readHtmlRecipe(html) {
   let ingredients = (micro.length ? micro : listed).filter(t => t.length < 200 && !isHeading(t));
   // Some pages print the list twice (phone and desktop layouts): keep one copy.
   // Repeats within one list are real ("Cheddar" for the sauce and the topping), so they stay.
-  const half = ingredients.length / 2;
-  if (Number.isInteger(half) && half > 0 && ingredients.slice(0, half).join('\n') === ingredients.slice(half).join('\n')) ingredients = ingredients.slice(0, half);
+  ingredients = halve(ingredients);
   if (!ingredients.length) return null;
   const meta = name => clean(((html.match(new RegExp(`<meta[^>]+(?:property|name)=["']${name}["'][^>]*>`, 'i')) || [''])[0].match(/content=["']([^"']*)["']/i) || [])[1]);
   const h1 = clean((html.match(/<h1\b[^>]*>([\s\S]*?)<\/h1>/i) || [])[1]);
@@ -165,8 +169,14 @@ function readHtmlRecipe(html) {
     image: meta('og:image'),
     recipeIngredient: ingredients,
     recipeYield: serves,
-    recipeInstructions: (microSteps.length ? microSteps : listedSteps).filter(t => t.length < 1500),
+    recipeInstructions: halve((microSteps.length ? microSteps : listedSteps).filter(t => t.length < 1500 && !/^print( recipe)?$/i.test(t))),
   };
+}
+
+// A list printed twice in a row (phone and desktop layouts): keep one copy
+function halve(list) {
+  const half = list.length / 2;
+  return Number.isInteger(half) && half > 0 && list.slice(0, half).join('\n') === list.slice(half).join('\n') ? list.slice(0, half) : list;
 }
 
 // ---- Method: plain strings, HowToStep objects, or HowToSections of steps ----
@@ -190,7 +200,10 @@ function parseMethod(v) {
       } else add(node.text || node.name || '');
     }
   })(v);
-  return out.filter(t => t.length > 2);
+  return out.map(tidyStep).filter(t => t.length > 2);
+}
+function tidyStep(t) {
+  return t.replace(/^(?:step\s*)?\d+\s*[.):-]?\s+(?=\S)/i, '').replace(/\*\*([^*]+)\*\*/g, '$1').replace(/\*\*/g, '').trim();
 }
 
 // ---- Tidy helpers ----
