@@ -33,6 +33,13 @@
   .row .mlabel { display: none; }
 
   .add-row { margin-top: 0.75rem; }
+  .method { margin-top: 1.5rem; padding-top: 1.25rem; border-top: 1px solid var(--line); }
+  .method-head { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; flex-wrap: wrap; margin-bottom: 0.5rem; }
+  .method-head h3 { font-family: var(--font-display); font-weight: 500; font-size: 1.1rem; margin: 0; }
+  .method-head label { display: inline-flex; align-items: center; gap: 0.45rem; font-size: 0.88rem; color: var(--ink-soft); cursor: pointer; }
+  .method-head input { width: 1.05rem; height: 1.05rem; accent-color: var(--blue-deep); }
+  .method p.hint { margin: 0 0 0.5rem; font-size: 0.85rem; color: var(--ink-soft); }
+  .method textarea { width: 100%; min-height: 160px; resize: vertical; font: inherit; line-height: 1.55; display: block; padding: 0.7rem 0.85rem; box-sizing: border-box; }
 
   .side { position: sticky; top: 1rem; display: flex; flex-direction: column; gap: 1rem; }
   .totals { background: linear-gradient(150deg, var(--blue-deep), var(--blue)); color: #fff; border: none; }
@@ -103,7 +110,7 @@
   .imp-paste summary { cursor: pointer; color: var(--blue-deep); font-weight: 600; width: fit-content; }
   .imp-paste[open] summary { margin-bottom: 0.6rem; }
   .imp-paste p { margin: 0 0 0.5rem; color: var(--ink-soft); font-size: 0.85rem; }
-  .imp-paste textarea { width: 100%; min-height: 150px; resize: vertical; font: inherit; line-height: 1.5; display: block; margin-bottom: 0.6rem; }
+  .imp-paste textarea { width: 100%; min-height: 150px; resize: vertical; font: inherit; line-height: 1.5; display: block; margin-bottom: 0.6rem; padding: 0.7rem 0.85rem; box-sizing: border-box; }
   .imp-key { display: flex; flex-wrap: wrap; gap: 0.35rem 1rem; margin-top: 0.4rem; font-size: 0.8rem; }
   .imp-key span::before { content: ""; display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 0.35rem; background: var(--k); }
 
@@ -141,13 +148,15 @@
 
   /* ---------- Printed recipe card (A4, one page) ---------- */
   @page { size: A4 portrait; margin: 12mm; }
-  .print-sheet { display: none; }
+  /* Type is set outside the print query too, so the off-screen measuring in fitToPage() matches the printout */
+  .print-sheet { display: none; flex-direction: column; box-sizing: border-box;
+    font-family: var(--font-body); color: #202B33; font-size: 10.5pt; line-height: 1.4; }
   @media print {
     body > *:not(.print-sheet) { display: none !important; }
     html, body { background: #fff !important; padding: 0 !important; margin: 0 !important; }
     .print-sheet {
-      display: flex !important; flex-direction: column; height: 272mm; overflow: hidden;
-      font-family: var(--font-body); color: #202B33; font-size: 10.5pt; line-height: 1.4;
+      display: flex !important; height: auto; overflow: hidden;
+      break-inside: avoid; page-break-inside: avoid;
       -webkit-print-color-adjust: exact; print-color-adjust: exact;
     }
   }
@@ -177,7 +186,12 @@
   .ps-guide div:first-child { border-left: none; }
   .ps-guide small { display: block; font-size: 8pt; color: #58666F; }
   .ps-guide b { font-size: 11pt; font-variant-numeric: tabular-nums; }
-  .ps-foot { margin-top: auto; padding-top: 2.5mm; border-top: 1px solid #C9D6DB; font-size: 7.5pt; color: #58666F; display: flex; justify-content: space-between; gap: 6mm; }
+  .ps-method { margin: 0 0 4mm; padding-left: 5mm; }
+  .ps-method li { margin-bottom: 1.2mm; padding-left: 1mm; }
+  .ps-method li.sec { list-style: none; margin-left: -5mm; padding-left: 0; font-weight: 600; margin-top: 2mm; }
+  .ps-method.cols { column-count: 2; column-gap: 7mm; }
+  .ps-method.cols li { break-inside: avoid; }
+  .ps-foot { margin-top: 4mm; padding-top: 2.5mm; border-top: 1px solid #C9D6DB; font-size: 7.5pt; color: #58666F; display: flex; justify-content: space-between; gap: 6mm; }
   /* Squeeze longer recipes so they still fit on one page */
   .print-sheet.compact { font-size: 9.5pt; }
   .print-sheet.compact .ps-table td { padding: 1mm 2mm; }
@@ -251,6 +265,15 @@
       </div>
       <div id="rows"></div>
       <button class="btn ghost add-row" id="addRow" type="button">+ Add ingredient</button>
+
+      <div class="method">
+        <div class="method-head">
+          <h3>Method</h3>
+          <label for="methodOnPrint"><input type="checkbox" id="methodOnPrint" checked> Include on the printout</label>
+        </div>
+        <p class="hint">One step per line. Imported recipes fill this in for you.</p>
+        <textarea class="in" id="method" placeholder="Preheat the oven to 180&deg;C.&#10;Mix the flour and sugar.&#10;Bake for 25 minutes." aria-label="Method"></textarea>
+      </div>
 
       <div class="bar">
         <button class="btn" id="saveBtn" type="button">Save recipe</button>
@@ -450,6 +473,8 @@
       cookedWeight: $('cookedWeight').value,
       portionWeight: $('portionWeight').value,
       source: recipeSource,
+      method: $('method').value.trim(),
+      methodOnPrint: $('methodOnPrint').checked,
       ingredients: [...rowsEl.children].map(r => ({
         ...(r.dataset.src ? { src: r.dataset.src, status: r.dataset.status, note: r.dataset.note || '' } : {}),
         name: r.querySelector('[data-k="name"]').value.trim(),
@@ -504,6 +529,8 @@
     $('portionWeight').value = recipe.portionWeight || '';
     candidates = []; lastSearch = recipe.name || '';
     recipeSource = recipe.source || null;
+    $('method').value = recipe.method || '';
+    $('methodOnPrint').checked = recipe.methodOnPrint !== false;
     photo = recipe.image || null; photoChosenByHand = !!recipe.imageByHand;
     rowsEl.innerHTML = '';
     (recipe.ingredients && recipe.ingredients.length ? recipe.ingredients : [{}, {}, {}]).forEach(addRow);
@@ -613,7 +640,10 @@
     });
     undoRecipe = readRecipe();
     const source = data.pasted ? null : { site: data.site, url: data.url, carbsPerServing: data.carbsPerServing, yieldText: data.yieldText };
+    const keepMethod = $('method').value;
     loadRecipe({
+      method: data.pasted ? keepMethod : (data.method || []).join('\n'),
+      methodOnPrint: $('methodOnPrint').checked,
       name: data.name,
       servings: data.servings || '',
       image: data.image ? { url: data.image, source: data.site } : null,
@@ -647,6 +677,7 @@
     const g = (v) => v === null ? '\u2013' : `${fmt(v)}<i>g</i>`;
     const guide = r.per100 !== null ? [50, 75, 100, 150, 200, 250].map(w => `<div><small>${w}g</small><b>${fmt(w * r.per100 / 100)}g</b></div>`).join('') : '';
     const today = new Date().toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' });
+    const steps = rec.methodOnPrint ? rec.method.split(/\r?\n/).map(t => t.replace(/^\s*(?:\d+[.)]|[\u2022*-])\s*/, '').trim()).filter(Boolean) : [];
 
     sheet.innerHTML = `
       <div class="ps-top"><b>Kylo Loki</b><span>Carb calculator &middot; ${today}</span></div>
@@ -670,6 +701,7 @@
         <tbody>${items.map(i => `<tr><td>${esc(i.name || 'Ingredient')}${i.status === 'check' ? ' <span style="color:#C0453D">(not checked)</span>' : ''}</td><td class="n">${fmt(num(i.weight))}g</td><td class="n">${fmt(num(i.per100))}g</td><td class="n">${fmt(i.carbs)}g</td></tr>`).join('')}</tbody>
         <tfoot><tr><td>Total</td><td class="n">${fmt(r.totalWeight)}g</td><td></td><td class="n">${fmt(r.totalCarbs)}g</td></tr></tfoot>
       </table>
+      ${steps.length ? `<h2 class="ps-h">Method</h2><ol class="ps-method${steps.length > 3 ? ' cols' : ''}">${steps.map(t => /:$/.test(t) ? `<li class="sec">${esc(t.slice(0, -1))}</li>` : `<li>${esc(t)}</li>`).join('')}</ol>` : ''}
       ${guide ? `<div class="ps-guide-wrap"><h2 class="ps-h">Portion guide <span style="font-family:var(--font-body);font-size:8.5pt;color:#58666F">(weight of cooked food on the plate)</span></h2><div class="ps-guide">${guide}</div></div>` : ''}
       <div class="ps-foot"><span>Carb values are a guide. Always check dosing with your diabetes team.</span><span>${rec.source ? 'Recipe: ' + esc(rec.source.site) + ' &middot; ' : ''}${photo && photo.source !== 'your photo' && (!rec.source || photo.source !== rec.source.site) ? 'Photo: ' + esc(photo.source) + ' &middot; ' : ''}kyloloki.com</span></div>`;
     fitToPage(sheet);
@@ -679,23 +711,28 @@
   // Lays the sheet out off-screen at A4 width and steps the text down until it fits one page.
   // If a recipe is still too long after the smallest size, it's scaled to fit as a last resort.
   function fitToPage(sheet) {
-    const mm = 96 / 25.4, maxH = 272 * mm;
+    // Aim a little short of A4's 273mm printable height: phones add their own margins when saving a PDF
+    const mm = 96 / 25.4, maxH = 255 * mm;
     sheet.style.cssText = 'display:flex;position:absolute;left:-10000px;top:0;width:186mm;height:auto;';
     sheet.style.zoom = '';
+    // Step the type down a size at a time. If a size is only a little too tall, shrink it slightly
+    // rather than dropping to the next size (which loses the photo and portion guide).
     for (const level of ['', 'compact', 'tiny', 'micro']) {
       sheet.className = 'print-sheet' + (level ? ' ' + level : '');
-      if (sheet.scrollHeight <= maxH) break;
+      if (sheet.scrollHeight <= maxH / 0.85) break;
     }
     const h = sheet.scrollHeight;
     sheet.style.cssText = '';
     if (h > maxH) {
       const z = Math.floor(maxH / h * 1000) / 1000;
       sheet.style.zoom = z;
-      sheet.style.height = (272 / z).toFixed(1) + 'mm'; // zoom shrinks the box too, so give it back its full height
+      sheet.style.height = (255 / z).toFixed(1) + 'mm'; // zoom shrinks the box too, so give it back its full height
     }
   }
 
   $('printBtn').addEventListener('click', () => {
+    const name = $('recipeName').value.trim();
+    if (name) document.title = `${name} - carbs - Kylo Loki`; // some phones skip the beforeprint event
     const img = buildPrintSheet();
     if (!img) { window.print(); return; }
     let done = false;
@@ -705,10 +742,19 @@
     setTimeout(go, 3000);
   });
   window.addEventListener('beforeprint', buildPrintSheet); // covers Ctrl+P too
+
+  // Saved PDFs are named after the page title, so title the page after the recipe while printing
+  const pageTitle = document.title;
+  window.addEventListener('beforeprint', () => {
+    const name = $('recipeName').value.trim();
+    if (name) document.title = `${name} - carbs - Kylo Loki`;
+  });
+  window.addEventListener('afterprint', () => { document.title = pageTitle; });
   $('clearBtn').addEventListener('click', () => { loadRecipe({}); flash('Cleared.'); });
   $('addRow').addEventListener('click', () => { addRow().querySelector('input').focus(); });
 
-  document.addEventListener('input', (e) => { if (e.target.matches('input.in')) recalc(); });
+  document.addEventListener('input', (e) => { if (e.target.matches('input.in, #method')) recalc(); });
+  $('methodOnPrint').addEventListener('change', recalc);
 
   // Pick up where you left off
   let draft = null;
