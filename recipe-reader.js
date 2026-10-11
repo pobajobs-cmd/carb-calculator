@@ -51,6 +51,7 @@ export async function handleRecipe(request) {
     servings: parseServings(recipe.recipeYield),
     yieldText: clean(toArray(recipe.recipeYield).join(' / ')),
     carbsPerServing: parseGrams(recipe.nutrition && recipe.nutrition.carbohydrateContent),
+    method: parseMethod(recipe.recipeInstructions).slice(0, 40),
     site: pageUrl.hostname.replace(/^www\./, ''),
     url: pageUrl.toString(),
   }, 200, 86400);
@@ -98,7 +99,7 @@ function walk(node, depth = 0) {
 const VOID = new Set(['area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'source', 'track', 'wbr']);
 function readHtmlRecipe(html) {
   const body = html.replace(/<!--[\s\S]*?-->/g, '').replace(/<(script|style|noscript|svg|template)\b[\s\S]*?<\/\1>/gi, '');
-  const micro = [], listed = [];
+  const micro = [], listed = [], microSteps = [], listedSteps = [];
   const stack = []; // {tag, ing, method, micro}
   let cur = null;   // {kind, depth, text}
   const tagRe = /<(\/?)([a-zA-Z][a-zA-Z0-9-]*)([^>]*)>|([^<]+)/g;
@@ -118,10 +119,13 @@ function readHtmlRecipe(html) {
       const parent = stack[stack.length - 1] || {};
       const saysIng = /ingredient/.test(cls), saysMethod = /method|instruction|direction|step/.test(cls);
       // A wrapper named for both ("ingredients-methods") marks neither
-      const node = { tag, ing: parent.ing || (saysIng && !saysMethod), method: parent.method || (saysMethod && !saysIng) };
+      const node = { tag, ing: parent.ing || (saysIng && !saysMethod), method: parent.method || (saysMethod && !saysIng), stepList: parent.stepList || (prop === 'recipeinstructions' && (tag === 'ol' || tag === 'ul')) };
       stack.push(node);
       if (!cur && /^(recipeingredient|ingredients)$/.test(prop)) cur = { kind: 'micro', depth: stack.length, text: '' };
+      else if (!cur && prop === 'recipeinstructions' && tag !== 'ol' && tag !== 'ul') cur = { kind: 'microStep', depth: stack.length, text: '' };
+      else if (!cur && tag === 'li' && node.stepList) cur = { kind: 'microStep', depth: stack.length, text: '' };
       else if (!cur && tag === 'li' && node.ing && !node.method) cur = { kind: 'list', depth: stack.length, text: '' };
+      else if (!cur && tag === 'li' && node.method) cur = { kind: 'step', depth: stack.length, text: '' };
     } else {
       const i = stack.map(s => s.tag).lastIndexOf(tag);
       if (i >= 0) closeTo(i);
@@ -131,7 +135,7 @@ function readHtmlRecipe(html) {
     while (stack.length > i) {
       if (cur && cur.depth === stack.length) {
         const t = clean(cur.text);
-        if (t) (cur.kind === 'micro' ? micro : listed).push(t);
+        if (t) ({ micro, list: listed, microStep: microSteps, step: listedSteps })[cur.kind].push(t);
         cur = null;
       }
       stack.pop();
@@ -161,7 +165,32 @@ function readHtmlRecipe(html) {
     image: meta('og:image'),
     recipeIngredient: ingredients,
     recipeYield: serves,
+    recipeInstructions: (microSteps.length ? microSteps : listedSteps).filter(t => t.length < 1500),
   };
+}
+
+// ---- Method: plain strings, HowToStep objects, or HowToSections of steps ----
+function parseMethod(v) {
+  const out = [];
+  const add = (t) => { t = clean(t); if (t) out.push(t); };
+  (function walkSteps(node) {
+    if (node == null) return;
+    if (typeof node === 'string') {
+      // One long string: split on list items, paragraphs or line breaks
+      const parts = node.split(/<\/?(?:li|p|br)[^>]*>|\n+/i);
+      parts.length > 1 ? parts.forEach(add) : add(node);
+      return;
+    }
+    if (Array.isArray(node)) { node.forEach(walkSteps); return; }
+    if (typeof node === 'object') {
+      const type = toArray(node['@type']).map(String).join(' ').toLowerCase();
+      if (type.includes('howtosection') || node.itemListElement) {
+        if (node.name) add(node.name + ':');
+        walkSteps(node.itemListElement);
+      } else add(node.text || node.name || '');
+    }
+  })(v);
+  return out.filter(t => t.length > 2);
 }
 
 // ---- Tidy helpers ----
