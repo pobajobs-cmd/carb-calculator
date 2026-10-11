@@ -177,6 +177,8 @@ function readHtmlRecipe(html) {
 // Repeats inside a single copy ("Cheddar" for the sauce and the topping) are real and stay.
 function halve(list) {
   const unique = (l) => new Set(l).size === l.length;
+  const mid = list.length / 2;
+  if (Number.isInteger(mid) && mid > 0 && list.slice(0, mid).join('\n') === list.slice(mid).join('\n')) return halve(list.slice(0, mid));
   for (let s = 1; s < list.length; s++) {
     const head = list.slice(0, s), tail = list.slice(s);
     // Both copies must be a decent size, so one stray repeat isn't mistaken for a second copy
