@@ -173,10 +173,18 @@ function readHtmlRecipe(html) {
   };
 }
 
-// A list printed twice in a row (phone and desktop layouts): keep one copy
+// A list printed twice (phone and desktop layouts, sometimes one copy shorter): keep the fuller copy.
+// Repeats inside a single copy ("Cheddar" for the sauce and the topping) are real and stay.
 function halve(list) {
-  const half = list.length / 2;
-  return Number.isInteger(half) && half > 0 && list.slice(0, half).join('\n') === list.slice(half).join('\n') ? list.slice(0, half) : list;
+  const unique = (l) => new Set(l).size === l.length;
+  for (let s = 1; s < list.length; s++) {
+    const head = list.slice(0, s), tail = list.slice(s);
+    // Both copies must be a decent size, so one stray repeat isn't mistaken for a second copy
+    if (Math.min(head.length, tail.length) < Math.max(2, Math.ceil(Math.max(head.length, tail.length) / 2))) continue;
+    if (unique(tail) && head.every(t => tail.includes(t))) return tail;
+    if (unique(head) && tail.every(t => head.includes(t))) return head;
+  }
+  return list;
 }
 
 // ---- Method: plain strings, HowToStep objects, or HowToSections of steps ----
