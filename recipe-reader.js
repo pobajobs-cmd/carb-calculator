@@ -140,7 +140,11 @@ function readHtmlRecipe(html) {
   closeTo(0);
   // Sub-headings inside ingredient lists ("For the sauce", "Topping:") aren't ingredients
   const isHeading = t => /:$/.test(t) || (/^(for|to) (the|serve|decorate|garnish)\b/i.test(t) && !/\d/.test(t));
-  const ingredients = [...new Set((micro.length ? micro : listed).filter(t => t.length < 200 && !isHeading(t)))];
+  let ingredients = (micro.length ? micro : listed).filter(t => t.length < 200 && !isHeading(t));
+  // Some pages print the list twice (phone and desktop layouts): keep one copy.
+  // Repeats within one list are real ("Cheddar" for the sauce and the topping), so they stay.
+  const half = ingredients.length / 2;
+  if (Number.isInteger(half) && half > 0 && ingredients.slice(0, half).join('\n') === ingredients.slice(half).join('\n')) ingredients = ingredients.slice(0, half);
   if (!ingredients.length) return null;
   const meta = name => clean(((html.match(new RegExp(`<meta[^>]+(?:property|name)=["']${name}["'][^>]*>`, 'i')) || [''])[0].match(/content=["']([^"']*)["']/i) || [])[1]);
   const h1 = clean((html.match(/<h1\b[^>]*>([\s\S]*?)<\/h1>/i) || [])[1]);
@@ -148,9 +152,12 @@ function readHtmlRecipe(html) {
   const servesText = (clean(body).match(/\b(?:serves|servings|makes)\s*:?\s*(\d+(?:\s*[-–]\s*\d+)?)/i) || [])[1];
   const serves = microYield || (servesText ? 'Serves ' + servesText : '');
   // Page titles usually end in the site's name ("Katsu Chicken Curry - James Martin Chef")
-  const title = meta('og:title').replace(/\s+[-|–—]\s+[^-|–—]+$/, '');
+  const strip = t => t.replace(/\s+[-|–—]\s+[^-|–—]+$/, '');
+  const og = meta('og:title'), tab = clean((html.match(/<title\b[^>]*>([\s\S]*?)<\/title>/i) || [])[1]);
+  // Some sites set og:title to just the site's name ("Mary Berry"): then use the tab title
+  const name = (og && strip(og) !== og) ? strip(og) : (tab && strip(tab) !== tab) ? strip(tab) : (h1 || og || tab);
   return {
-    name: title || h1,
+    name,
     image: meta('og:image'),
     recipeIngredient: ingredients,
     recipeYield: serves,
