@@ -210,7 +210,11 @@ function parseMethod(v) {
       } else add(node.text || node.name || '');
     }
   })(v);
-  return out.map(tidyStep).filter(t => t.length > 2);
+  const steps = out.map(tidyStep).filter(t => t.length > 2)
+    // Short lines with no full stop are sub-headings ("Lamb Curry"): mark them so the printout shows a heading
+    .map(t => (t.length <= 40 && !/[.!?:)]$/.test(t)) ? t + ':' : t);
+  while (steps.length && /:$/.test(steps[steps.length - 1])) steps.pop(); // a heading with nothing under it ("Mary's Tips")
+  return steps;
 }
 function tidyStep(t) {
   return t.replace(/^(?:step\s*)?\d+\s*[.):-]?\s+(?=\S)/i, '').replace(/\*\*([^*]+)\*\*/g, '$1').replace(/\*\*/g, '').trim();
