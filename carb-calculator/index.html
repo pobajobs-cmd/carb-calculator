@@ -99,6 +99,11 @@
   .imp-status.err { color: var(--ink); background: var(--paper-tint); border-left: 3px solid #C0453D; padding: 0.55rem 0.8rem; border-radius: 0 8px 8px 0; }
   .imp-status.done { color: var(--ink); background: var(--paper-tint); border-left: 3px solid var(--gold); padding: 0.55rem 0.8rem; border-radius: 0 8px 8px 0; }
   .imp-status button { border: none; background: none; color: var(--blue-deep); font: inherit; font-weight: 600; text-decoration: underline; cursor: pointer; padding: 0; margin-left: 0.25rem; }
+  .imp-paste { margin-top: 0.8rem; font-size: 0.9rem; }
+  .imp-paste summary { cursor: pointer; color: var(--blue-deep); font-weight: 600; width: fit-content; }
+  .imp-paste[open] summary { margin-bottom: 0.6rem; }
+  .imp-paste p { margin: 0 0 0.5rem; color: var(--ink-soft); font-size: 0.85rem; }
+  .imp-paste textarea { width: 100%; min-height: 150px; resize: vertical; font: inherit; line-height: 1.5; display: block; margin-bottom: 0.6rem; }
   .imp-key { display: flex; flex-wrap: wrap; gap: 0.35rem 1rem; margin-top: 0.4rem; font-size: 0.8rem; }
   .imp-key span::before { content: ""; display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 0.35rem; background: var(--k); }
 
@@ -216,6 +221,12 @@
       <button class="btn" id="importBtn" type="submit">Import recipe</button>
     </form>
     <div class="imp-status" id="importStatus" role="status"></div>
+    <details class="imp-paste" id="pasteBox">
+      <summary>Or paste the ingredients instead</summary>
+      <p>For sites that won't share their recipes: copy the ingredient list from the page, one ingredient per line, and paste it here.</p>
+      <textarea class="in" id="pasteText" placeholder="200g plain flour&#10;2 eggs&#10;300ml milk" aria-label="Ingredient list"></textarea>
+      <button class="btn" id="pasteBtn" type="button">Add these ingredients</button>
+    </details>
   </section>
 
   <div class="calc">
@@ -576,14 +587,32 @@
       data = { error: 'Couldn\u2019t reach the importer. It only works on the live site, not when the page is opened from your computer.' };
     }
     btn.disabled = false; btn.textContent = 'Import recipe';
-    if (data.error) { importStatus(esc(data.error), 'err'); return; }
+    if (data.error) {
+      importStatus(esc(data.error) + (data.blocked ? ' Copy the ingredient list from the page and paste it below instead.' : ''), 'err');
+      if (data.blocked) { $('pasteBox').open = true; }
+      return;
+    }
+    applyImport(data);
+  });
+
+  // Paste instead: same as an import, from lines the person copied
+  $('pasteBtn')?.addEventListener('click', () => {
+    const lines = $('pasteText').value.split(/\r?\n/)
+      .map(l => l.replace(/^[\s\u2022\u25A2\u25A1\u2610\-*\u2013\u2014]+/, '').trim())
+      .filter(l => l && !/:$/.test(l) && !/^ingredients$/i.test(l));
+    if (!lines.length) { importStatus('Paste at least one ingredient, one per line.', 'err'); return; }
+    applyImport({ name: $('recipeName').value.trim(), ingredients: lines, servings: '', image: '', site: '', url: '', pasted: true });
+    $('pasteText').value = ''; $('pasteBox').open = false;
+  });
+
+  function applyImport(data) {
 
     const rows = data.ingredients.map(line => {
       const p = parseIngredientLine(line);
       return { name: p.name, weight: p.grams ?? '', per100: p.per100 ?? '', src: line, status: p.status, note: p.note };
     });
     undoRecipe = readRecipe();
-    const source = { site: data.site, url: data.url, carbsPerServing: data.carbsPerServing, yieldText: data.yieldText };
+    const source = data.pasted ? null : { site: data.site, url: data.url, carbsPerServing: data.carbsPerServing, yieldText: data.yieldText };
     loadRecipe({
       name: data.name,
       servings: data.servings || '',
@@ -592,12 +621,12 @@
       source,
       ingredients: rows,
     });
-    if (!data.image) searchPhoto(true);
+    if (!data.image && data.name) searchPhoto(true);
 
     const n = (s) => rows.filter(r => r.status === s).length;
     const ok = n('ok'), est = n('est'), check = n('check');
     importStatus(
-      `Imported <strong>${esc(data.name)}</strong> from ${esc(data.site)}: ${rows.length} ingredients${data.yieldText ? `, ${esc(/^(serves|makes)\b/i.test(data.yieldText) ? data.yieldText.charAt(0).toLowerCase() + data.yieldText.slice(1) : 'makes ' + data.yieldText)}` : ''}. <button type="button" id="undoImport">Undo</button>
+      `${data.pasted ? 'Added' : `Imported <strong>${esc(data.name)}</strong> from ${esc(data.site)}:`} ${rows.length} ingredients${data.yieldText ? `, ${esc(/^(serves|makes)\b/i.test(data.yieldText) ? data.yieldText.charAt(0).toLowerCase() + data.yieldText.slice(1) : 'makes ' + data.yieldText)}` : ''}. <button type="button" id="undoImport">Undo</button>
        <div class="imp-key">
          <span style="--k:#4F8C5B">${ok} from exact weights</span>
          <span style="--k:#D3A227">${est} estimated \u2014 worth a quick look</span>
@@ -607,7 +636,7 @@
       if (undoRecipe) loadRecipe(undoRecipe);
       undoRecipe = null; importStatus('Import undone.');
     });
-  });
+  }
 
   // ---- Printable recipe card: always one A4 page ----
   function buildPrintSheet() {
