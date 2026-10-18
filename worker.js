@@ -8,6 +8,9 @@
 //   /api/calendar/appointments
 //                      Kylo's appointments, read from Tom's shared iCloud calendar. The calendar's
 //                      share link lives in the Cloudflare secret APPOINTMENTS_ICS (never in this repo).
+//   /api/feed/<key>.ics
+//                      A private calendar feed of due changes for iPhones to subscribe to. No login
+//                      (phones can't sign in), so it's protected by the long random key in the address.
 //   /api/recipe        reads a recipe page for the carb calculator's link importer.
 
 import { handleRecipe } from './recipe-reader.js';
@@ -21,6 +24,7 @@ export default {
     try {
       if (url.pathname === '/api/recipe') return await handleRecipe(request);
       if (url.pathname === '/api/calendar' || url.pathname.startsWith('/api/calendar/')) return await handleCalendar(request, env, url);
+      if (url.pathname.startsWith('/api/feed/')) return await handleFeed(env, url);
       if (url.pathname.startsWith('/api/')) return json({ error: 'Not found' }, 404);
       return env.ASSETS.fetch(request);
     } catch (err) {
@@ -53,6 +57,13 @@ async function handleCalendar(request, env, url) {
   // GET /api/calendar/appointments  -> appointments from the iPhone calendar (read-only)
   if (parts[2] === 'appointments' && parts.length === 3 && method === 'GET') {
     return json(await getAppointments(env));
+  }
+
+  // GET /api/calendar/feed  -> the private iPhone subscription address (made on first use)
+  // POST /api/calendar/feed/reset  -> a new address; the old one stops working
+  if (parts[2] === 'feed') {
+    if (parts.length === 3 && method === 'GET') return json({ path: '/api/feed/' + await feedKey(env, false) + '.ics' });
+    if (parts[3] === 'reset' && method === 'POST') return json({ path: '/api/feed/' + await feedKey(env, true) + '.ics' });
   }
 
   // GET /api/calendar  -> everything the page needs
@@ -169,6 +180,101 @@ function nameFor(env, email) {
   let names = env.FAMILY_NAMES || {};
   if (typeof names === 'string') { try { names = JSON.parse(names); } catch (e) { names = {}; } }
   return names[email.toLowerCase()] || email.split('@')[0];
+}
+
+// ---------------------------------------------------------------------------
+// The iPhone feed: next due changes (with alerts), logged changes and "Other" entries.
+// ---------------------------------------------------------------------------
+const DEFAULT_INTERVALS = { pump: 3, sensor: 10, transmitter: 90, pen: 30 };
+const LABELS = { pump: 'Pump change', sensor: 'Sensor change', transmitter: 'Transmitter change', pen: 'Pen (insulin) change' };
+
+async function feedKey(env, fresh) {
+  if (!fresh) {
+    const row = await env.DB.prepare("SELECT value FROM settings WHERE key = 'feed.key'").all();
+    if (row.results[0]) return row.results[0].value;
+  }
+  const bytes = crypto.getRandomValues(new Uint8Array(24));
+  const key = btoa(String.fromCharCode(...bytes)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  await env.DB.prepare("INSERT INTO settings (key, value, updated_at) VALUES ('feed.key', ?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at")
+    .bind(key, new Date().toISOString()).run();
+  return key;
+}
+
+async function handleFeed(env, url) {
+  const m = /^\/api\/feed\/([A-Za-z0-9_-]{24,64})\.ics$/.exec(url.pathname);
+  if (!m) return new Response('Not found', { status: 404 });
+  await ensureSchema(env);
+  const row = await env.DB.prepare("SELECT value FROM settings WHERE key = 'feed.key'").all();
+  const key = row.results[0] && row.results[0].value;
+  if (!key || !sameText(key, m[1])) return new Response('Not found', { status: 404 });
+
+  const [entries, saved] = await Promise.all([listEntries(env), getSettings(env)]);
+  const interval = (t) => saved[t] > 0 ? saved[t] : DEFAULT_INTERVALS[t];
+  const todayW = Date.UTC(...wallDate(wallNow()).split('-').map((v, i) => i === 1 ? v - 1 : +v));
+  const keepFrom = todayW - 120 * DAY;
+  const d = (str) => Date.UTC(+str.slice(0, 4), +str.slice(5, 7) - 1, +str.slice(8, 10));
+  const ev = [];
+  const reminders = (what) => [
+    { trigger: '-PT15H', text: what + ' tomorrow' },   // 9am the day before
+    { trigger: 'PT8H', text: what + ' today' },         // 8am on the day
+  ];
+
+  for (const t of Object.keys(LABELS)) {
+    const hist = entries.filter(e => e.type === t).sort((a, b) => a.date.localeCompare(b.date));
+    hist.filter(e => d(e.date) >= keepFrom).forEach(e => ev.push({
+      uid: 'log-' + e.id, day: d(e.date), title: LABELS[t].replace(' change', ' changed'),
+      notes: [e.createdByName && 'Logged by ' + e.createdByName, e.notes, e.earlyReason && 'Early because: ' + e.earlyReason].filter(Boolean).join('\n'),
+    }));
+    const last = hist[hist.length - 1];
+    if (last) {
+      const due = d(last.date) + interval(t) * DAY;
+      ev.push({ uid: 'due-' + t, day: due, title: LABELS[t] + ' due',
+        notes: `Last changed ${last.date}${last.createdByName ? ' by ' + last.createdByName : ''}. Every ${interval(t)} days.`, alarms: reminders(LABELS[t] + ' due') });
+    }
+  }
+  for (const e of entries.filter(e => e.type === 'other')) {
+    if (d(e.date) >= keepFrom) ev.push({ uid: 'log-' + e.id, day: d(e.date), title: e.label || 'Other', notes: e.notes });
+    if (e.repeat && e.repeatDays) {
+      const next = d(e.date) + e.repeatDays * DAY;
+      if (next >= keepFrom) ev.push({ uid: 'next-' + e.id, day: next, title: (e.label || 'Other') + ' due', notes: `Repeats every ${e.repeatDays} days.`, alarms: reminders((e.label || 'Other') + ' due') });
+    }
+  }
+
+  const stamp = new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d+/, '');
+  const ymd = (w) => wallDate(w).replace(/-/g, '');
+  const lines = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//kyloloki.com//Family calendar//EN', 'CALSCALE:GREGORIAN', 'METHOD:PUBLISH',
+    'X-WR-CALNAME:Kylo Loki', 'X-WR-CALDESC:Supply changes from kyloloki.com', 'X-WR-TIMEZONE:Europe/London',
+    'REFRESH-INTERVAL;VALUE=DURATION:PT1H', 'X-PUBLISHED-TTL:PT1H'];
+  for (const e of ev) {
+    lines.push('BEGIN:VEVENT', 'UID:' + e.uid + '@kyloloki.com', 'DTSTAMP:' + stamp,
+      'DTSTART;VALUE=DATE:' + ymd(e.day), 'DTEND;VALUE=DATE:' + ymd(e.day + DAY),
+      'SUMMARY:' + icsEsc(e.title), 'TRANSP:TRANSPARENT');
+    if (e.notes) lines.push('DESCRIPTION:' + icsEsc(e.notes));
+    for (const a of e.alarms || []) lines.push('BEGIN:VALARM', 'ACTION:DISPLAY', 'DESCRIPTION:' + icsEsc(a.text), 'TRIGGER:' + a.trigger, 'END:VALARM');
+    lines.push('END:VEVENT');
+  }
+  lines.push('END:VCALENDAR');
+  return new Response(lines.map(foldIcs).join('\r\n') + '\r\n', {
+    headers: { 'Content-Type': 'text/calendar; charset=utf-8', 'Cache-Control': 'no-store', 'Content-Disposition': 'inline; filename="kylo-loki.ics"' },
+  });
+}
+const icsEsc = (t) => String(t || '').replace(/\\/g, '\\\\').replace(/\r?\n/g, '\\n').replace(/([,;])/g, '\\$1');
+function foldIcs(line) {
+  // Lines over 75 bytes wrap onto continuation lines that start with a space
+  const enc = new TextEncoder();
+  if (enc.encode(line).length <= 75) return line;
+  const out = []; let cur = '';
+  for (const ch of line) {
+    if (enc.encode(cur + ch).length > (out.length ? 74 : 75)) { out.push(cur); cur = ''; }
+    cur += ch;
+  }
+  out.push(cur);
+  return out.join('\r\n ');
+}
+function sameText(a, b) {
+  if (a.length !== b.length) return false;
+  let x = 0; for (let i = 0; i < a.length; i++) x |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return x === 0;
 }
 
 // ---------------------------------------------------------------------------
