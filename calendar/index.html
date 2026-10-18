@@ -10,12 +10,12 @@
 <link rel="stylesheet" href="/assets/site.css">
 <style>
   :root {
-    --pump: #C0453D; --sensor: #4F8C5B; --transmitter: #D3A227; --pen: #3E6E88; --other: #8B5FA3;
+    --pump: #C0453D; --sensor: #4F8C5B; --transmitter: #D3A227; --pen: #3E6E88; --other: #8B5FA3; --appt: #2C8A93;
   }
   @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) { --pump: #D97A73; --sensor: #83B08C; --transmitter: #E0BC5E; --pen: #7FAFC7; --other: #B190C4; }
+    :root:not([data-theme="light"]) { --pump: #D97A73; --sensor: #83B08C; --transmitter: #E0BC5E; --pen: #7FAFC7; --other: #B190C4; --appt: #6CC3C9; }
   }
-  :root[data-theme="dark"] { --pump: #D97A73; --sensor: #83B08C; --transmitter: #E0BC5E; --pen: #7FAFC7; --other: #B190C4; }
+  :root[data-theme="dark"] { --pump: #D97A73; --sensor: #83B08C; --transmitter: #E0BC5E; --pen: #7FAFC7; --other: #B190C4; --appt: #6CC3C9; }
 
   .cal-page { max-width: 760px; margin: 0 auto; }
   .head-row { display: flex; justify-content: space-between; align-items: flex-end; gap: 1rem; flex-wrap: wrap; }
@@ -150,6 +150,25 @@
   .sync .acts { display: flex; gap: 0.5rem; flex-wrap: wrap; }
   .sync .acts .btn { padding: 0.45rem 0.9rem; font-size: 0.82rem; }
   .detail-sub .by { color: var(--ink); font-weight: 600; }
+
+  /* Appointments from the iPhone calendar: square dots so they read differently from changes */
+  .cal-dot.appt, .legend .swatch.appt, .detail-top .dot.appt { border-radius: 2px; }
+  .detail-card.appt { border-left: 3px solid var(--appt); }
+  .detail-note.plain { white-space: pre-line; }
+  #apptSection { margin-top: 1.25rem; }
+  #apptSection h2 { font-family: var(--font-display); font-weight: 500; font-size: 1.25rem; margin: 0 0 0.9rem; }
+  .appt-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.6rem; }
+  .appt-list li { display: grid; grid-template-columns: 4.2rem minmax(0, 1fr); gap: 0.8rem; align-items: start; background: var(--card);
+    border: 1px solid var(--line); border-left: 4px solid var(--appt); border-radius: 12px; padding: 0.7rem 0.9rem; cursor: pointer; }
+  .appt-list li:hover { border-color: var(--appt); }
+  .appt-when { text-align: center; line-height: 1.1; }
+  .appt-when .d { display: block; font-family: var(--font-display); font-size: 1.5rem; }
+  .appt-when .m { display: block; font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--ink-soft); }
+  .appt-what strong { display: block; font-size: 0.95rem; overflow-wrap: anywhere; }
+  .appt-what span { display: block; font-size: 0.82rem; color: var(--ink-soft); overflow-wrap: anywhere; }
+  .appt-what .soon { display: inline-block; margin-top: 0.3rem; font-size: 0.72rem; font-weight: 700; padding: 0.15rem 0.5rem; border-radius: 20px;
+    background: color-mix(in srgb, var(--appt) 18%, transparent); color: var(--appt); }
+  .appt-empty { font-size: 0.88rem; color: var(--ink-soft); margin: 0; }
 </style>
 </head>
 <body>
@@ -181,6 +200,12 @@
 
       <div class="legend" id="legend"></div>
       <p class="legend-key">&#9679; logged &nbsp; &#9675; forecast &nbsp; &#8856; superseded forecast</p>
+    </section>
+
+    <section class="card" id="apptSection" hidden>
+      <h2>Coming up</h2>
+      <ul class="appt-list" id="apptList"></ul>
+      <p class="legend-key" id="apptFoot"></p>
     </section>
 
     <section class="card overview">
@@ -273,6 +298,20 @@
   // it falls back to changes saved in this browser only, and says so at the top.
   let entries = [];
   let shared = false, me = null;
+  // Appointments read from the iPhone calendar (via /api/calendar/appointments). Read-only here.
+  let appts = [], apptInfo = { configured: false };
+  async function loadAppointments() {
+    if (!shared) return;
+    try {
+      apptInfo = await api('/appointments');
+      appts = apptInfo.events || [];
+    } catch (e) { apptInfo = { configured: true, error: 'Couldn’t load appointments.' }; }
+    renderLegend(); renderAll();
+  }
+  function apptWhen(a) {
+    if (a.allDay) return a.endDate && a.endDate !== a.date ? 'All day, until ' + fmtShort(fromStr(a.endDate)) : 'All day';
+    return a.time + (a.endTime && a.endTime !== a.time && a.endDate === a.date ? '–' + a.endTime : '');
+  }
   const STORE = 'kylo-calendar-entries-v1';
 
   function loadLocal() {
@@ -345,6 +384,13 @@
       });
     });
 
+    appts.forEach(a => {
+      let d = fromStr(a.date); const last = fromStr(a.endDate || a.date);
+      for (let i = 0; i < 31 && d <= last; i++, d = addDays(d, 1)) {
+        add(toStr(d), { kind: 'appt', type: 'appt', color: 'var(--appt)', label: a.title, appt: a });
+      }
+    });
+
     entries.filter(e => e.type === 'other').forEach(e => {
       add(e.date, { kind: 'actual', type: 'other', color: 'var(--other)', label: e.label || 'Other', entryId: e.id });
       if (e.repeat && e.repeatDays) {
@@ -389,8 +435,8 @@
         const dots = document.createElement('div'); dots.className = 'cal-dots';
         dayEvents.forEach(ev => {
           const dot = document.createElement('span');
-          dot.className = 'cal-dot' + (ev.kind === 'forecast' ? ' forecast' : ev.kind === 'superseded' ? ' superseded' : '');
-          if (ev.kind === 'actual') dot.style.background = ev.color;
+          dot.className = 'cal-dot' + (ev.kind === 'forecast' ? ' forecast' : ev.kind === 'superseded' ? ' superseded' : ev.kind === 'appt' ? ' appt' : '');
+          if (ev.kind === 'actual' || ev.kind === 'appt') dot.style.background = ev.color;
           if (ev.kind === 'forecast') dot.style.color = ev.color;
           dots.appendChild(dot);
         });
@@ -408,7 +454,8 @@
     const legend = document.getElementById('legend');
     legend.innerHTML = Object.values(TYPES).map(cfg =>
       `<span class="item"><span class="swatch" style="background:${cfg.color}"></span>${cfg.label}</span>`
-    ).join('') + `<span class="item"><span class="swatch" style="background:var(--other)"></span>Other</span>`;
+    ).join('') + `<span class="item"><span class="swatch" style="background:var(--other)"></span>Other</span>`
+      + (apptInfo.configured ? `<span class="item"><span class="swatch appt" style="background:var(--appt)"></span>Appointment (iPhone)</span>` : '');
   }
 
   // ---- Overview cards ----
@@ -438,7 +485,32 @@
     });
   }
 
-  function renderAll() { renderCalendar(); renderOverview(); }
+  function renderAppointments() {
+    const sec = document.getElementById('apptSection');
+    sec.hidden = !apptInfo.configured;
+    if (!apptInfo.configured) return;
+    const list = document.getElementById('apptList'), foot = document.getElementById('apptFoot');
+    const todayStr = toStr(today);
+    const next = appts.filter(a => (a.endDate || a.date) >= todayStr).slice(0, 5);
+    if (!next.length) {
+      list.innerHTML = '';
+      foot.textContent = apptInfo.error || 'Nothing booked in the iPhone calendar. New appointments show up here within about 10 minutes.';
+      return;
+    }
+    list.innerHTML = next.map(a => {
+      const d = fromStr(a.date);
+      const days = Math.round((d - today) / 86400000);
+      const soon = days <= 0 ? 'Today' : days === 1 ? 'Tomorrow' : days < 7 ? 'In ' + days + ' days' : '';
+      return `<li data-date="${a.date >= todayStr ? a.date : todayStr}">
+        <div class="appt-when"><span class="d">${d.getDate()}</span><span class="m">${d.toLocaleDateString(undefined, { weekday: 'short' })} ${d.toLocaleDateString(undefined, { month: 'short' })}</span></div>
+        <div class="appt-what"><strong>${esc(a.title)}</strong><span>${esc(apptWhen(a))}${a.location ? ' &middot; ' + esc(a.location) : ''}</span>${soon ? `<span class="soon">${soon}</span>` : ''}</div>
+      </li>`;
+    }).join('');
+    list.querySelectorAll('li').forEach(li => li.addEventListener('click', () => openModal(li.dataset.date)));
+    foot.textContent = apptInfo.error ? apptInfo.error : apptInfo.stale ? 'Showing the last copy: the iPhone calendar couldn’t be reached just now.' : 'From the iPhone calendar. Add or change appointments there.';
+  }
+
+  function renderAll() { renderCalendar(); renderOverview(); renderAppointments(); }
 
   // ---- Modal ----
   const overlay = document.getElementById('overlay');
@@ -449,6 +521,15 @@
   let modalDateStr = null;
 
   function detailCardHTML(ev) {
+    if (ev.kind === 'appt') {
+      const a = ev.appt;
+      return `
+      <div class="detail-card appt">
+        <div class="detail-top"><span class="lbl"><span class="dot appt" style="background:var(--appt)"></span>${esc(a.title)}</span></div>
+        <div class="detail-sub">${esc(apptWhen(a))}${a.location ? ' &middot; ' + esc(a.location) : ''} &middot; from the iPhone calendar</div>
+        ${a.notes ? `<div class="detail-note plain">${esc(a.notes)}</div>` : ''}
+      </div>`;
+    }
     const ringClass = ev.kind === 'actual' ? '' : ' ring';
     const ghost = ev.kind === 'superseded' ? ' ghost' : '';
     let sub = '', note = '';
@@ -521,7 +602,7 @@
     });
     const otherBtn = document.createElement('button');
     otherBtn.type = 'button'; otherBtn.className = 'type-btn'; otherBtn.style.setProperty('--dc', 'var(--other)');
-    otherBtn.innerHTML = `<span class="dot"></span><span class="txt"><strong>Other</strong><small>Hospital visit, blood test, anything else</small></span>`;
+    otherBtn.innerHTML = `<span class="dot"></span><span class="txt"><strong>Other</strong><small>Anything else. Appointments in the iPhone calendar appear on their own.</small></span>`;
     otherBtn.addEventListener('click', () => openOtherForm());
     typeButtons.appendChild(otherBtn);
 
@@ -667,6 +748,7 @@
       applySettings(data.settings);
       showSharedStatus();
       offerImport();
+      loadAppointments();
     } catch (e) {
       shared = false; entries = loadLocal();
       setSync(e.status === 401
@@ -680,6 +762,7 @@
   document.addEventListener('visibilitychange', async () => {
     if (document.visibilityState !== 'visible' || !shared) return;
     try { const data = await api(''); entries = data.entries; applySettings(data.settings); renderAll(); } catch (e) {}
+    loadAppointments();
   });
 
   // Changes logged on this device before the calendar was shared can be copied across once.
