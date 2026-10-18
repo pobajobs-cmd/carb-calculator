@@ -151,6 +151,18 @@
   .sync .acts .btn { padding: 0.45rem 0.9rem; font-size: 0.82rem; }
   .detail-sub .by { color: var(--ink); font-weight: 600; }
 
+  #phoneSection { margin-top: 1.25rem; }
+  #phoneSection h2 { font-family: var(--font-display); font-weight: 500; font-size: 1.25rem; margin: 0 0 0.6rem; }
+  .phone-lede { margin: 0 0 0.9rem; font-size: 0.92rem; color: var(--ink-soft); }
+  .phone-acts { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-bottom: 0.8rem; }
+  .phone-acts .btn { padding: 0.55rem 1.1rem; font-size: 0.86rem; }
+  .phone-more { font-size: 0.86rem; color: var(--ink-soft); }
+  .phone-more summary { cursor: pointer; font-weight: 600; color: var(--ink); }
+  .phone-more ol { padding-left: 1.2rem; margin: 0.6rem 0; }
+  .phone-more li { margin-bottom: 0.3rem; }
+  .phone-more b { color: var(--ink); }
+  .phone-more .btn { padding: 0.45rem 0.9rem; font-size: 0.82rem; }
+
   /* Appointments from the iPhone calendar: square dots so they read differently from changes */
   .cal-dot.appt, .legend .swatch.appt, .detail-top .dot.appt { border-radius: 2px; }
   .detail-card.appt { border-left: 3px solid var(--appt); }
@@ -211,6 +223,26 @@
     <section class="card overview">
       <h2>Next changes</h2>
       <div class="device-grid" id="deviceGrid"></div>
+    </section>
+
+    <section class="card" id="phoneSection" hidden>
+      <h2>On your iPhone</h2>
+      <p class="phone-lede">Put the next pump, sensor, transmitter and pen changes in your iPhone's calendar, with a reminder at 9am the day before and 8am on the day. It keeps itself up to date.</p>
+      <div class="phone-acts">
+        <a class="btn" id="feedSub" href="#">Add to this iPhone</a>
+        <button class="btn ghost" id="feedCopy" type="button">Copy link</button>
+      </div>
+      <details class="phone-more">
+        <summary>Setting it up, and keeping it private</summary>
+        <ol>
+          <li>Open this page on your iPhone and tap <b>Add to this iPhone</b>, then <b>Subscribe</b>.</li>
+          <li>On the next screen, turn <b>off</b> "Remove Alerts" if you want the reminders.</li>
+          <li>Each person who wants it does the same on their own phone. It works on Android and Google Calendar too (use Copy link, then "From URL").</li>
+        </ol>
+        <p>Anyone with the link can see the supply dates, so only share it with family. If it ends up somewhere it shouldn't, make a new one: the old link stops working, and everyone re-adds it.</p>
+        <button class="btn ghost" id="feedReset" type="button">Make a new link</button>
+      </details>
+      <p class="legend-key" id="feedStatus"></p>
     </section>
 
     <section class="card" id="exportSection">
@@ -512,6 +544,29 @@
 
   function renderAll() { renderCalendar(); renderOverview(); renderAppointments(); }
 
+  // ---- iPhone subscription (the site's own feed) ----
+  let feedPath = '';
+  function showFeed(path) {
+    feedPath = path;
+    document.getElementById('phoneSection').hidden = false;
+    document.getElementById('feedSub').href = 'webcal://' + location.host + path;
+  }
+  async function loadFeed() {
+    try { showFeed((await api('/feed')).path); } catch (e) {}
+  }
+  document.getElementById('feedSub').addEventListener('click', (e) => { if (!feedPath) e.preventDefault(); });
+  document.getElementById('feedCopy').addEventListener('click', async () => {
+    const link = 'https://' + location.host + feedPath, st = document.getElementById('feedStatus');
+    try { await navigator.clipboard.writeText(link); st.textContent = 'Link copied. Only share it with family.'; }
+    catch (e) { st.textContent = link; }
+  });
+  document.getElementById('feedReset').addEventListener('click', async () => {
+    const st = document.getElementById('feedStatus');
+    if (!confirm('Make a new link? Phones using the old one will stop updating until they add the new one.')) return;
+    try { showFeed((await api('/feed/reset', { method: 'POST', body: '{}' })).path); st.textContent = 'New link made. Re-add it on each phone, and delete the old subscription.'; }
+    catch (e) { st.textContent = 'Couldn’t make a new link: ' + e.message; }
+  });
+
   // ---- Modal ----
   const overlay = document.getElementById('overlay');
   const modalDate = document.getElementById('modalDate');
@@ -749,6 +804,7 @@
       showSharedStatus();
       offerImport();
       loadAppointments();
+      loadFeed();
     } catch (e) {
       shared = false; entries = loadLocal();
       setSync(e.status === 401
