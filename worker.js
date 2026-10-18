@@ -180,19 +180,28 @@ let apptCache = { at: 0, src: '', data: null };
 const DAY = 86400000;
 
 async function getAppointments(env) {
-  const src = String(env.APPOINTMENTS_ICS || '').trim();
+  // Tidy up the pasted link: stray quotes/spaces, and webcal:// (Apple's name for https:// calendar links)
+  const src = String(env.APPOINTMENTS_ICS || '').trim().replace(/^["'<]+|["'>]+$/g, '').trim();
   if (!src) return { configured: false, events: [] };
   if (apptCache.data && apptCache.src === src && Date.now() - apptCache.at < 10 * 60000) return apptCache.data;
-  let text;
-  try {
-    const res = await fetch(src.replace(/^webcal:\/\//i, 'https://'), { headers: { 'User-Agent': 'kyloloki.com family calendar' } });
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-    text = await res.text();
-    if (!text.includes('BEGIN:VCALENDAR')) throw new Error('Not a calendar');
-  } catch (e) {
-    console.error('Appointments feed:', e.message);
-    if (apptCache.data && apptCache.src === src) return { ...apptCache.data, stale: true };
-    return { configured: true, events: [], error: 'Couldn’t read the iPhone calendar just now.' };
+  const url = src.replace(/^webcal:\/\//i, 'https://');
+  let text, why = '';
+  if (!/^https:\/\/[^/]+\.icloud\.com\//i.test(url) && !/^https?:\/\//i.test(url)) why = 'the saved link doesn’t start with webcal:// or https://';
+  for (const ua of ['Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15', 'kyloloki.com family calendar']) {
+    if (why.startsWith('the saved link')) break;
+    try {
+      const res = await fetch(url, { headers: { 'User-Agent': ua, 'Accept': 'text/calendar, */*' }, redirect: 'follow' });
+      const body = await res.text();
+      if (!res.ok) { why = `iCloud answered ${res.status}` + (res.status === 404 ? ' (link not found: is Public Calendar still switched on?)' : ''); continue; }
+      if (!body.includes('BEGIN:VCALENDAR')) { why = `iCloud sent something that isn’t a calendar (${(res.headers.get('Content-Type') || 'no type').split(';')[0]}, ${body.length} bytes)`; continue; }
+      text = body; why = ''; break;
+    } catch (e) { why = 'couldn’t connect (' + String(e.message || e).slice(0, 80) + ')'; }
+  }
+  if (!text) {
+    console.error('Appointments feed:', why);
+    if (apptCache.data && apptCache.src === src) return { ...apptCache.data, stale: true, why };
+    let host = ''; try { host = new URL(url).host; } catch (e) {}
+    return { configured: true, events: [], error: 'Couldn’t read the iPhone calendar: ' + why + '.', host };
   }
   const now = wallNow();
   const data = { configured: true, events: parseIcs(text, now - 120 * DAY, now + 400 * DAY), fetchedAt: new Date().toISOString() };
