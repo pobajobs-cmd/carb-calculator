@@ -27,6 +27,9 @@ content:
       - name: video
         label: YouTube link (optional — paste the full URL)
         type: string
+      - name: image
+        label: Header image (optional — shown instead of a video thumbnail when there's no video)
+        type: image
       - name: placeholder
         label: Placeholder / example post (shows an "Example" label on the site)
         type: boolean

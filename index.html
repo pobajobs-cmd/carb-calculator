@@ -351,6 +351,7 @@
     <h2>Say hello</h2>
     <p>Whether you're a family going through the same thing, have a question, or just want to say hi, we'd love to hear from you.</p>
     <a class="btn" href="mailto:kylolokikll@gmail.com">Email us</a>
+    <a class="btn ghost" href="https://www.youtube.com/@kylolokilloyd" target="_blank" rel="noopener">Our YouTube channel</a>
     <span class="email">kylolokikll@gmail.com</span>
   </section>
 </div>
@@ -371,11 +372,12 @@
     const [latest, ...rest] = posts;
     const recent = rest.slice(0, 3);
     const vid = youTubeId(latest.video);
-    const thumb = vid ? `<img src="https://i.ytimg.com/vi/${vid}/hqdefault.jpg" alt="" loading="lazy">` : '';
+    const thumb = vid ? `<img src="https://i.ytimg.com/vi/${vid}/hqdefault.jpg" alt="" loading="lazy">`
+      : latest.image ? `<img src="${latest.image}" alt="" loading="lazy">` : '';
 
     root.innerHTML = `
       <a class="featured${latest.placeholder ? ' is-placeholder' : ''}" href="/post/?slug=${latest.slug}">
-        <div class="thumb-lg">${thumb}<span class="play">▶</span></div>
+        <div class="thumb-lg">${thumb}${vid || !latest.image ? '<span class="play">▶</span>' : ''}</div>
         <div>
           <div class="meta">${latest.placeholder ? '<span class="badge-ph">Example post</span>' : fmtPostDate(latest.date)}</div>
           <h3>${latest.title}</h3>
