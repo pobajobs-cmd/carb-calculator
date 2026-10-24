@@ -52,6 +52,20 @@
   .contours { position: absolute; right: 0; top: 0; width: 440px; max-width: 60vw; pointer-events: none; z-index: 0; }
   .contours circle { fill: none; stroke: var(--line); stroke-width: 3; }
   .hero > *:not(.contours) { position: relative; z-index: 1; }
+  .hero { display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 24px; align-items: center; }
+  .hero-text { min-width: 0; }
+  @media (max-width: 760px) { .hero { grid-template-columns: 1fr; } .squidge-btn { justify-self: center; margin-top: 18px; } }
+
+  /* Squidge: every Squidge gets a white sticker edge so the navy outline reads on any ground */
+  .sq { display: block; height: auto; filter: drop-shadow(3px 0 0 #fff) drop-shadow(-3px 0 0 #fff) drop-shadow(0 3px 0 #fff) drop-shadow(0 -3px 0 #fff); }
+  .squidge-btn { position: relative; border: 0; background: none; padding: 0; cursor: pointer; width: min(330px, 34vw); min-width: 200px; -webkit-tap-highlight-color: transparent; }
+  .squidge-btn .sq { width: 100%; }
+  .squidge-btn:focus-visible { outline: 3px solid var(--sky-ink); outline-offset: 6px; border-radius: 24px; }
+  .squidge-btn .pop { animation: pop .38s cubic-bezier(.3, 1.6, .5, 1); }
+  @keyframes pop { 0% { transform: scale(.86) rotate(-3deg); } 60% { transform: scale(1.06) rotate(2deg); } 100% { transform: none; } }
+  .hint { position: absolute; left: -6px; top: 10%; background: var(--sun); color: var(--navy); font: 700 15px var(--display); border: 2px solid var(--navy); border-radius: 999px; padding: 5px 12px; transform: rotate(-6deg); box-shadow: 0 3px 0 var(--edge); pointer-events: none; }
+  .hint[hidden] { display: none; }
+  @media (prefers-reduced-motion: reduce) { .squidge-btn .pop { animation: none; } }
   .logo { width: min(560px, 100%); height: auto; }
   .tagline { margin: 18px 0 8px; font: 700 clamp(26px, 5vw, 40px)/1.1 var(--display); text-wrap: balance; }
   .tagline em { font-style: normal; color: var(--coral-ink); }
@@ -80,7 +94,7 @@
   .vid .pic img { width: 100%; height: 100%; object-fit: cover; }
   .vid .ph { position: absolute; inset: 0; display: grid; place-items: center; container-type: inline-size; }
   .vid .ph svg { position: absolute; inset: 0; width: 100%; height: 100%; }
-  .vid .pic .ph .badge { position: relative; width: 26%; height: auto; object-fit: contain; }
+  .vid .pic .ph .sqph { position: relative; width: 38%; height: auto; object-fit: contain; }
   .vid .sticker { position: absolute; right: 14px; top: 14px; background: var(--coral); color: var(--navy); font: 700 14px var(--display); border: 2px solid #fff; border-radius: 999px; padding: 4px 12px; transform: rotate(4deg); }
   .vid .sticker.sun { background: var(--sun); }
   .vid .play { position: absolute; left: 50%; top: 50%; width: 72px; height: 72px; margin: -36px 0 0 -36px; border-radius: 50%; background: var(--coral); border: 3px solid #fff; display: grid; place-items: center; box-shadow: 0 4px 0 #071628; }
@@ -91,7 +105,8 @@
   .vid .meta { font: 600 14px var(--body); color: var(--ink-soft); margin: 0 0 16px; }
 
   /* Fact card */
-  .fact header { background: var(--teal); color: var(--navy); padding: 16px 22px; }
+  .fact header { position: relative; background: var(--teal); color: var(--navy); padding: 16px 118px 16px 22px; min-height: 104px; }
+  .fact .sq { position: absolute; right: 8px; top: 6px; width: 104px; }
   .fact .label { background: var(--navy); color: #fff; }
   .fact h2 { margin: 8px 0 0; font: 700 28px/1.1 var(--display); }
   .fact ul { list-style: none; margin: 0; padding: 18px 22px 0; display: flex; flex-wrap: wrap; gap: 8px; }
@@ -107,8 +122,9 @@
   .shelf h3 { margin: 0; padding: 12px 16px 16px; font: 600 18px/1.25 var(--display); }
 
   /* For grown-ups + footer */
-  .grown { border-top: 2px dashed var(--line); padding-block: 36px 24px; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 20px; align-items: start; }
-  .grown img { width: 72px; height: 72px; }
+  .grown { position: relative; margin-top: 44px; border-top: 2px dashed var(--line); padding-block: 36px 24px; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 20px; align-items: start; }
+  .grown .parent { width: 120px; }
+  .grown .peek { position: absolute; right: 28px; top: -86px; width: 116px; }
   .grown h2 { margin: 0 0 6px; font: 700 22px var(--display); }
   .grown p { margin: 0 0 8px; max-width: 40em; color: var(--ink-soft); }
   footer { padding-block: 16px calc(32px + env(safe-area-inset-bottom, 0px)); font: 600 14px var(--body); color: var(--ink-soft); display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
@@ -125,14 +141,20 @@
 
   <header class="hero">
     <svg class="contours" viewBox="0 0 560 560" aria-hidden="true"><circle cx="280" cy="280" r="60"/><circle cx="280" cy="280" r="110"/><circle cx="280" cy="280" r="160"/><circle cx="280" cy="280" r="210"/><circle cx="280" cy="280" r="260"/></svg>
-    <h1 class="sr">Kyki Kids</h1>
-    <picture>
-      <source srcset="/kyki/logo-dark.svg" media="(prefers-color-scheme: dark)">
-      <img class="logo" src="/kyki/logo.svg" alt="Kyki Kids" width="1000" height="273">
-    </picture>
-    <p class="tagline">Animal facts for <em>curious explorers</em></p>
-    <p class="lede">Short, funny videos about real animals, made for kids and the grown-ups watching with them.</p>
-    <div class="ctas" id="ctas"><span class="btn soon">YouTube channel coming soon</span></div>
+    <div class="hero-text">
+      <h1 class="sr">Kyki Kids</h1>
+      <picture>
+        <source srcset="/kyki/logo-dark.svg" media="(prefers-color-scheme: dark)">
+        <img class="logo" src="/kyki/logo.svg" alt="Kyki Kids" width="1000" height="273">
+      </picture>
+      <p class="tagline">Animal facts for <em>curious explorers</em></p>
+      <p class="lede">Short, funny videos about real animals, made for kids and the grown-ups watching with them. Hosted by Squidge, our octopus.</p>
+      <div class="ctas" id="ctas"><span class="btn soon">YouTube channel coming soon</span></div>
+    </div>
+    <button class="squidge-btn" id="squidge" type="button" aria-label="Squidge the octopus. Tap to make Squidge react.">
+      <img class="sq" id="squidgeImg" src="/kyki/squidge/wave.svg" alt="" width="1100" height="1000">
+      <span class="hint" id="hint">Tap me!</span>
+    </button>
   </header>
 
   <main>
@@ -147,11 +169,13 @@
   </main>
 
   <section class="grown" aria-labelledby="grownHead">
-    <img src="/kyki/badge.svg" alt="" width="72" height="72">
+    <img class="sq parent" src="/kyki/squidge/parent-mode.svg" alt="" width="1100" height="1000">
+    <img class="sq peek" src="/kyki/squidge/peek.svg" alt="" width="620" height="470">
     <div>
       <h2 id="grownHead">For grown-ups</h2>
       <p>Kyki Kids is made by Kylo's family, as part of KyloLoki. Kyki (say it "Kai-key") is Kylo and Loki mixed together.</p>
       <p>Videos are short, calm and silly, with real facts and no shouting. Clicking a video opens it on YouTube.</p>
+      <p>Squidge wears a glucose sensor on its arm, just like Kylo does.</p>
     </div>
   </section>
 
@@ -171,7 +195,7 @@
   };
   const safeUrl = (u) => /^https:\/\/(www\.|m\.)?(youtube\.com|youtu\.be)\//.test(String(u || '')) ? u : '';
   const ytIcon = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="4" fill="#0B2239"/><path d="M10 9l5 3-5 3z" fill="#fff"/></svg>';
-  const placeholder = `<span class="ph" aria-hidden="true"><svg viewBox="0 0 640 360"><rect width="640" height="360" fill="#0B2239"/><g fill="none" stroke="#23466B" stroke-width="4"><circle cx="320" cy="180" r="90"/><circle cx="320" cy="180" r="140"/><circle cx="320" cy="180" r="190"/><circle cx="320" cy="180" r="240"/></g><circle cx="90" cy="70" r="9" fill="#FF7A66"/><circle cx="560" cy="90" r="7" fill="#2EC4B6"/><circle cx="540" cy="300" r="10" fill="#5AB0FF"/><circle cx="120" cy="290" r="8" fill="#FFC233"/></svg><img class="badge" src="/kyki/badge.svg" alt=""></span>`;
+  const placeholder = `<span class="ph" aria-hidden="true"><svg viewBox="0 0 640 360"><rect width="640" height="360" fill="#0B2239"/><g fill="none" stroke="#23466B" stroke-width="4"><circle cx="320" cy="180" r="90"/><circle cx="320" cy="180" r="140"/><circle cx="320" cy="180" r="190"/><circle cx="320" cy="180" r="240"/></g><circle cx="90" cy="70" r="9" fill="#FF7A66"/><circle cx="560" cy="90" r="7" fill="#2EC4B6"/><circle cx="540" cy="300" r="10" fill="#5AB0FF"/><circle cx="120" cy="290" r="8" fill="#FFC233"/></svg><img class="sq sqph" src="/kyki/squidge/excited.svg" alt=""></span>`;
   const fmtDate = (d) => { const t = new Date(d); return isNaN(t) ? '' : t.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }); };
 
   function render(data) {
@@ -220,13 +244,32 @@
     const fact = document.getElementById('fact');
     if (f && f.animal) {
       fact.innerHTML = `
-        <header><span class="label">${esc(f.tag || 'Fact of the week')}</span><h2>${esc(f.animal)}</h2></header>
+        <header><span class="label">${esc(f.tag || 'Fact of the week')}</span><h2>${esc(f.animal)}</h2><img class="sq" src="/kyki/squidge/wow.svg" alt="" width="1100" height="1000"></header>
         ${(f.stats || []).length ? `<ul>${f.stats.slice(0, 4).map(s => `<li>${esc(s)}</li>`).join('')}</ul>` : ''}
         <p>${esc(f.text || '')}</p>`;
     } else {
       fact.hidden = true;
     }
   }
+
+  // Tap Squidge for a reaction; Squidge goes back to waving after a moment
+  const REACTIONS = ['laugh', 'wow', 'wink', 'love', 'cheeky', 'excited', 'dizzy', 'shy', 'cheer', 'deal-with-it', 'sleepy', 'uh-oh'];
+  const sq = document.getElementById('squidgeImg');
+  let last = 'wave', back = null;
+  const show = (name) => {
+    sq.src = '/kyki/squidge/' + name + '.svg';
+    sq.classList.remove('pop'); void sq.offsetWidth; sq.classList.add('pop');
+    last = name;
+  };
+  document.getElementById('squidge').addEventListener('click', () => {
+    document.getElementById('hint').hidden = true;
+    let next; do { next = REACTIONS[Math.floor(Math.random() * REACTIONS.length)]; } while (next === last);
+    show(next);
+    clearTimeout(back);
+    back = setTimeout(() => show('wave'), 2600);
+  });
+  // Load the reactions quietly so taps feel instant
+  window.addEventListener('load', () => setTimeout(() => REACTIONS.forEach(n => { const i = new Image(); i.src = '/kyki/squidge/' + n + '.svg'; }), 800));
 
   fetch('/kyki/videos.json', { cache: 'no-cache' })
     .then(r => r.ok ? r.json() : Promise.reject())
