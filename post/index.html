@@ -15,6 +15,7 @@
   header.post h1 { font-family: var(--font-display); font-weight: 500; font-size: clamp(1.8rem, 1.3rem + 2.4vw, 2.6rem); line-height: 1.15; margin: 0; text-wrap: balance; }
   .video-wrap { position: relative; width: 100%; aspect-ratio: 16/9; border-radius: var(--radius); overflow: hidden; background: var(--paper-tint); margin-bottom: 1.75rem; }
   .video-wrap iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+  .hero-img { display: block; width: 100%; height: auto; border-radius: var(--radius); margin-bottom: 1.75rem; }
   .prose img { max-width: 100%; border-radius: 12px; margin: 1.5rem 0; }
   .back { display: inline-block; margin-top: 2rem; font-size: 0.9rem; font-weight: 600; text-decoration: none; color: var(--ink-soft); }
   .back:hover { color: var(--ink); }
@@ -47,7 +48,7 @@
           <h1>${post.title}</h1>
           ${post.placeholder ? '<div class="ph-banner"><span>&#9998;</span><span><strong>This is a placeholder.</strong> It shows how journal posts will look. Our first real post is coming soon.</span></div>' : ''}
         </header>
-        ${id ? `<div class="video-wrap"><iframe src="https://www.youtube.com/embed/${id}" title="${post.title}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>` : ''}
+        ${id ? `<div class="video-wrap"><iframe src="https://www.youtube.com/embed/${id}" title="${post.title}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>` : post.image ? `<img class="hero-img" src="${post.image}" alt="">` : ''}
         <div class="prose">${marked.parse(post.body || '')}</div>
       `;
     }).catch(() => {
