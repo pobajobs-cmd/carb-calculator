@@ -31,7 +31,7 @@
     <header class="page-head">
       <span class="eyebrow">Journal</span>
       <h1>All <em>posts</em></h1>
-      <p class="lede">A weekly look at life with T1D, each with a video. Newest first.</p>
+      <p class="lede">A weekly look at life with T1D, each with a video on <a href="https://www.youtube.com/@kylolokilloyd" target="_blank" rel="noopener">our YouTube channel</a>. Newest first.</p>
     </header>
     <div id="listRoot" class="post-list"><p class="loading">Loading&hellip;</p></div>
   </div>
@@ -47,7 +47,7 @@
       const vid = youTubeId(p.video);
       return `
       <a class="post-row${p.placeholder ? ' is-placeholder' : ''}" href="/post/?slug=${p.slug}">
-        <div class="thumb">${vid ? `<img src="https://i.ytimg.com/vi/${vid}/hqdefault.jpg" alt="" loading="lazy">` : ''}</div>
+        <div class="thumb">${vid ? `<img src="https://i.ytimg.com/vi/${vid}/hqdefault.jpg" alt="" loading="lazy">` : p.image ? `<img src="${p.image}" alt="" loading="lazy">` : ''}</div>
         <div>
           <div class="date">${p.placeholder ? '<span class="badge-ph">Example post</span>' : fmtPostDate(p.date)}</div>
           <h3>${p.title}</h3>
