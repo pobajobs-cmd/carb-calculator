@@ -12,6 +12,7 @@ const NAV_LINKS = [
   { href: '/carb-calculator/',label: 'Carb calculator' },
   { href: '/calendar/',       label: 'Calendar' },
   { href: '/podcast/',        label: 'Podcast' },
+  { href: '/kyki/',           label: 'Kyki Kids' },
   { href: '/archive/',        label: 'Journal', also: ['/post/'] },
 ];
 
