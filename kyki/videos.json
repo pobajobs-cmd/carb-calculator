@@ -1,0 +1,14 @@
+{
+  "channel": "",
+  "next": {
+    "title": "10 Amazing Sharks",
+    "teaser": "From the tiny lantern shark to the bus-sized whale shark: ten sharks, ten fun facts."
+  },
+  "videos": [],
+  "fact": {
+    "tag": "Fact of the week",
+    "animal": "Great white shark",
+    "stats": ["Up to 6 m long", "About 300 teeth", "Lives on cool coasts"],
+    "text": "Great whites lose teeth all the time and grow new ones. They can get through thousands in a lifetime, which would keep the tooth fairy very busy."
+  }
+}

@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Kyki Kids: animal facts for curious explorers</title>
+<meta name="description" content="Kyki Kids: short, funny videos about real animals, for kids and the grown-ups watching with them. Part of the KyloLoki family.">
+<link rel="icon" href="/kyki/badge.svg" type="image/svg+xml">
+<meta name="theme-color" content="#FFF7E8" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0B2239" media="(prefers-color-scheme: dark)">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700&family=Nunito:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+  /* Kyki Kids: an explorer's field guide. Paper by day, deep-sea navy by night.
+     Brand board: the Kyki Kids Brand Board artifact. Bright colours are fills; text on paper uses the -ink shades. */
+  :root {
+    --surface: #FFF7E8; --raised: #FFFFFF; --ink: #0B2239; --ink-soft: #4A5A6E; --line: #E6D7BC;
+    --navy: #0B2239; --coral: #FF7A66; --sun: #FFC233; --teal: #2EC4B6; --sky: #5AB0FF;
+    --coral-ink: #B23A28; --teal-ink: #0B6E65; --sky-ink: #1C64B8;
+    --edge: var(--navy);           /* card borders and sticker shadows */
+    --display: 'Fredoka', 'Baloo 2', ui-rounded, system-ui, sans-serif;
+    --body: 'Nunito', ui-rounded, system-ui, sans-serif;
+    --r-sm: 8px; --r-md: 16px; --r-lg: 24px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --surface: #0B2239; --raised: #12304F; --ink: #F3F7FC; --ink-soft: #A9C7E0; --line: #23466B;
+      --coral-ink: #FF7A66; --teal-ink: #2EC4B6; --sky-ink: #5AB0FF;
+      --edge: #071628;
+      color-scheme: dark;
+    }
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body { margin: 0; background: var(--surface); color: var(--ink); font: 400 17px/1.6 var(--body); -webkit-font-smoothing: antialiased; overflow-x: hidden; }
+  a { color: var(--sky-ink); }
+  img { max-width: 100%; display: block; }
+  .wrap { max-width: 1040px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+  /* Top strip: the way back to KyloLoki */
+  .top { display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap; padding-block: calc(14px + env(safe-area-inset-top, 0px)) 14px; font: 600 14px var(--body); }
+  .top a { color: var(--ink-soft); text-decoration: none; }
+  .top a:hover { color: var(--ink); text-decoration: underline; text-underline-offset: 3px; }
+  .top .fam { color: var(--ink-soft); }
+
+  /* Hero */
+  .hero { position: relative; padding-block: 24px 48px; overflow: clip; }
+  html, body { overflow-x: clip; }
+  .contours { position: absolute; right: 0; top: 0; width: 440px; max-width: 60vw; pointer-events: none; z-index: 0; }
+  .contours circle { fill: none; stroke: var(--line); stroke-width: 3; }
+  .hero > *:not(.contours) { position: relative; z-index: 1; }
+  .logo { width: min(560px, 100%); height: auto; }
+  .tagline { margin: 18px 0 8px; font: 700 clamp(26px, 5vw, 40px)/1.1 var(--display); text-wrap: balance; }
+  .tagline em { font-style: normal; color: var(--coral-ink); }
+  .lede { margin: 0 0 24px; max-width: 34em; font-size: 19px; color: var(--ink-soft); }
+  .ctas { display: flex; gap: 14px; flex-wrap: wrap; align-items: center; }
+
+  /* Sticker buttons */
+  .btn { display: inline-flex; align-items: center; gap: 8px; min-height: 48px; padding: 0 22px; border: 2px solid var(--navy); border-radius: var(--r-md);
+    background: var(--coral); color: var(--navy); font: 700 18px var(--display); text-decoration: none; box-shadow: 0 4px 0 var(--edge); transition: transform .08s, box-shadow .08s; }
+  .btn:hover { transform: translateY(-1px); }
+  .btn:active { transform: translateY(4px); box-shadow: 0 0 0 var(--edge); }
+  .btn:focus-visible, .vid a:focus-visible { outline: 3px solid var(--sky-ink); outline-offset: 3px; }
+  .btn.soon { background: var(--raised); color: var(--ink); border-color: var(--line); box-shadow: none; cursor: default; font-size: 16px; }
+  .btn svg { width: 22px; height: 22px; }
+
+  /* Field-guide grid */
+  .grid { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 28px; align-items: start; padding-bottom: 56px; }
+  @media (max-width: 760px) { .grid { grid-template-columns: 1fr; } }
+  .label { display: inline-block; font: 600 13px var(--display); letter-spacing: .06em; text-transform: uppercase; background: var(--navy); color: #fff; border-radius: 999px; padding: 4px 12px; }
+  @media (prefers-color-scheme: dark) { .label { background: var(--sun); color: var(--navy); } }
+  .card { background: var(--raised); border: 2px solid var(--navy); border-radius: var(--r-lg); overflow: hidden; box-shadow: 0 4px 0 var(--edge); }
+  @media (prefers-color-scheme: dark) { .card { border-color: var(--line); } }
+
+  /* Latest video */
+  .vid .pic { position: relative; display: block; aspect-ratio: 16 / 9; background: var(--navy); overflow: hidden; }
+  .vid .pic img { width: 100%; height: 100%; object-fit: cover; }
+  .vid .ph { position: absolute; inset: 0; display: grid; place-items: center; container-type: inline-size; }
+  .vid .ph svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .vid .pic .ph .badge { position: relative; width: 26%; height: auto; object-fit: contain; }
+  .vid .sticker { position: absolute; right: 14px; top: 14px; background: var(--coral); color: var(--navy); font: 700 14px var(--display); border: 2px solid #fff; border-radius: 999px; padding: 4px 12px; transform: rotate(4deg); }
+  .vid .sticker.sun { background: var(--sun); }
+  .vid .play { position: absolute; left: 50%; top: 50%; width: 72px; height: 72px; margin: -36px 0 0 -36px; border-radius: 50%; background: var(--coral); border: 3px solid #fff; display: grid; place-items: center; box-shadow: 0 4px 0 #071628; }
+  .vid .play::after { content: ""; margin-left: 6px; border-left: 22px solid var(--navy); border-top: 14px solid transparent; border-bottom: 14px solid transparent; }
+  .vid .txt { padding: 18px 22px 24px; }
+  .vid h2 { margin: 10px 0 4px; font: 600 clamp(24px, 3.4vw, 30px)/1.15 var(--display); text-wrap: balance; }
+  .vid p { margin: 0 0 16px; color: var(--ink-soft); }
+  .vid .meta { font: 600 14px var(--body); color: var(--ink-soft); margin: 0 0 16px; }
+
+  /* Fact card */
+  .fact header { background: var(--teal); color: var(--navy); padding: 16px 22px; }
+  .fact .label { background: var(--navy); color: #fff; }
+  .fact h2 { margin: 8px 0 0; font: 700 28px/1.1 var(--display); }
+  .fact ul { list-style: none; margin: 0; padding: 18px 22px 0; display: flex; flex-wrap: wrap; gap: 8px; }
+  .fact li { font: 600 14px var(--body); background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-sm); padding: 6px 10px; }
+  .fact p { margin: 0; padding: 14px 22px 22px; }
+
+  /* More videos */
+  .more { padding-bottom: 56px; }
+  .more h2 { font: 700 28px var(--display); margin: 0 0 16px; }
+  .shelf { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 20px; }
+  .shelf a { text-decoration: none; color: inherit; }
+  .shelf .card img { aspect-ratio: 16 / 9; width: 100%; object-fit: cover; background: var(--navy); }
+  .shelf h3 { margin: 0; padding: 12px 16px 16px; font: 600 18px/1.25 var(--display); }
+
+  /* For grown-ups + footer */
+  .grown { border-top: 2px dashed var(--line); padding-block: 36px 24px; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 20px; align-items: start; }
+  .grown img { width: 72px; height: 72px; }
+  .grown h2 { margin: 0 0 6px; font: 700 22px var(--display); }
+  .grown p { margin: 0 0 8px; max-width: 40em; color: var(--ink-soft); }
+  footer { padding-block: 16px calc(32px + env(safe-area-inset-bottom, 0px)); font: 600 14px var(--body); color: var(--ink-soft); display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+  footer a { color: inherit; }
+  @media (prefers-reduced-motion: reduce) { .btn { transition: none; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <a href="/">&larr; Kylo Loki</a>
+    <span class="fam">Part of the KyloLoki family</span>
+  </div>
+
+  <header class="hero">
+    <svg class="contours" viewBox="0 0 560 560" aria-hidden="true"><circle cx="280" cy="280" r="60"/><circle cx="280" cy="280" r="110"/><circle cx="280" cy="280" r="160"/><circle cx="280" cy="280" r="210"/><circle cx="280" cy="280" r="260"/></svg>
+    <h1 class="sr">Kyki Kids</h1>
+    <picture>
+      <source srcset="/kyki/logo-dark.svg" media="(prefers-color-scheme: dark)">
+      <img class="logo" src="/kyki/logo.svg" alt="Kyki Kids" width="1000" height="273">
+    </picture>
+    <p class="tagline">Animal facts for <em>curious explorers</em></p>
+    <p class="lede">Short, funny videos about real animals, made for kids and the grown-ups watching with them.</p>
+    <div class="ctas" id="ctas"><span class="btn soon">YouTube channel coming soon</span></div>
+  </header>
+
+  <main>
+    <section class="grid" aria-label="Latest video and fact of the week">
+      <article class="card vid" id="latest" aria-live="polite"></article>
+      <article class="card fact" id="fact"></article>
+    </section>
+    <section class="more" id="more" hidden>
+      <h2>More adventures</h2>
+      <div class="shelf" id="shelf"></div>
+    </section>
+  </main>
+
+  <section class="grown" aria-labelledby="grownHead">
+    <img src="/kyki/badge.svg" alt="" width="72" height="72">
+    <div>
+      <h2 id="grownHead">For grown-ups</h2>
+      <p>Kyki Kids is made by Kylo's family, as part of KyloLoki. Kyki (say it "Kai-key") is Kylo and Loki mixed together.</p>
+      <p>Videos are short, calm and silly, with real facts and no shouting. Clicking a video opens it on YouTube.</p>
+    </div>
+  </section>
+
+  <footer>
+    <span>&copy; <span id="yr">2026</span> Kyki Kids</span>
+    <a href="/">Visit KyloLoki</a>
+  </footer>
+</div>
+
+<script>
+(function () {
+  document.getElementById('yr').textContent = new Date().getFullYear();
+  const esc = (t) => String(t == null ? '' : t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const ytId = (u) => {
+    const m = String(u || '').match(/(?:youtu\.be\/|v=|shorts\/|embed\/|live\/)([A-Za-z0-9_-]{11})/);
+    return m ? m[1] : '';
+  };
+  const safeUrl = (u) => /^https:\/\/(www\.|m\.)?(youtube\.com|youtu\.be)\//.test(String(u || '')) ? u : '';
+  const ytIcon = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="4" fill="#0B2239"/><path d="M10 9l5 3-5 3z" fill="#fff"/></svg>';
+  const placeholder = `<span class="ph" aria-hidden="true"><svg viewBox="0 0 640 360"><rect width="640" height="360" fill="#0B2239"/><g fill="none" stroke="#23466B" stroke-width="4"><circle cx="320" cy="180" r="90"/><circle cx="320" cy="180" r="140"/><circle cx="320" cy="180" r="190"/><circle cx="320" cy="180" r="240"/></g><circle cx="90" cy="70" r="9" fill="#FF7A66"/><circle cx="560" cy="90" r="7" fill="#2EC4B6"/><circle cx="540" cy="300" r="10" fill="#5AB0FF"/><circle cx="120" cy="290" r="8" fill="#FFC233"/></svg><img class="badge" src="/kyki/badge.svg" alt=""></span>`;
+  const fmtDate = (d) => { const t = new Date(d); return isNaN(t) ? '' : t.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }); };
+
+  function render(data) {
+    const channel = safeUrl(data.channel);
+    const videos = (data.videos || []).filter(v => v && v.title && safeUrl(v.url));
+    if (channel) {
+      document.getElementById('ctas').innerHTML = `<a class="btn" href="${esc(channel)}" target="_blank" rel="noopener">${ytIcon} Watch on YouTube</a>`;
+    }
+
+    const latest = document.getElementById('latest');
+    if (videos.length) {
+      const v = videos[0], id = ytId(v.url);
+      latest.innerHTML = `
+        <a class="pic" href="${esc(v.url)}" target="_blank" rel="noopener" aria-label="Watch ${esc(v.title)} on YouTube">
+          ${id ? `<img src="https://i.ytimg.com/vi/${id}/hqdefault.jpg" alt="" loading="lazy" onerror="this.style.visibility='hidden'">` : placeholder}
+          <span class="play" aria-hidden="true"></span><span class="sticker">New</span>
+        </a>
+        <div class="txt">
+          <span class="label">Latest video</span>
+          <h2>${esc(v.title)}</h2>
+          ${v.date ? `<p class="meta">${esc(fmtDate(v.date))}</p>` : ''}
+          ${v.teaser ? `<p>${esc(v.teaser)}</p>` : ''}
+          <a class="btn" href="${esc(v.url)}" target="_blank" rel="noopener">${ytIcon} Watch on YouTube</a>
+        </div>`;
+    } else {
+      const n = data.next || {};
+      latest.innerHTML = `
+        <div class="pic">${placeholder}<span class="sticker sun">Coming soon</span></div>
+        <div class="txt">
+          <span class="label">First video</span>
+          <h2>${esc(n.title || 'Our first adventure')}</h2>
+          <p>${esc(n.teaser || 'The first Kyki Kids video is on its way.')}</p>
+        </div>`;
+    }
+
+    const more = videos.slice(1, 13);
+    document.getElementById('more').hidden = !more.length;
+    document.getElementById('shelf').innerHTML = more.map(v => {
+      const id = ytId(v.url);
+      return `<a href="${esc(v.url)}" target="_blank" rel="noopener"><article class="card">
+        ${id ? `<img src="https://i.ytimg.com/vi/${id}/hqdefault.jpg" alt="" loading="lazy" onerror="this.style.visibility='hidden'">` : ''}
+        <h3>${esc(v.title)}</h3></article></a>`;
+    }).join('');
+
+    const f = data.fact;
+    const fact = document.getElementById('fact');
+    if (f && f.animal) {
+      fact.innerHTML = `
+        <header><span class="label">${esc(f.tag || 'Fact of the week')}</span><h2>${esc(f.animal)}</h2></header>
+        ${(f.stats || []).length ? `<ul>${f.stats.slice(0, 4).map(s => `<li>${esc(s)}</li>`).join('')}</ul>` : ''}
+        <p>${esc(f.text || '')}</p>`;
+    } else {
+      fact.hidden = true;
+    }
+  }
+
+  fetch('/kyki/videos.json', { cache: 'no-cache' })
+    .then(r => r.ok ? r.json() : Promise.reject())
+    .then(render)
+    .catch(() => render({}));
+})();
+</script>
+</body>
+</html>
