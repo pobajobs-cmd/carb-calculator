@@ -27,6 +27,65 @@ content:
       - name: video
         label: YouTube link (optional — paste the full URL)
         type: string
+      - name: placeholder
+        label: Placeholder / example post (shows an "Example" label on the site)
+        type: boolean
       - name: body
         label: Post
         type: rich-text
+
+  - name: kyki
+    label: Kyki Kids videos
+    type: file
+    path: kyki/videos.json
+    format: json
+    fields:
+      - name: channel
+        label: YouTube channel link (leave empty until the channel is live)
+        type: string
+      - name: videos
+        label: Videos (newest first; the top one shows as Latest video)
+        type: object
+        list: true
+        fields:
+          - name: title
+            label: Title
+            type: string
+            required: true
+          - name: url
+            label: YouTube link
+            type: string
+            required: true
+          - name: date
+            label: Date
+            type: date
+          - name: teaser
+            label: One-line teaser
+            type: text
+      - name: next
+        label: Coming soon (shown until the first video is added)
+        type: object
+        fields:
+          - name: title
+            label: Title
+            type: string
+          - name: teaser
+            label: Teaser
+            type: text
+      - name: fact
+        label: Fact of the week
+        type: object
+        fields:
+          - name: tag
+            label: Label
+            type: string
+          - name: animal
+            label: Animal
+            type: string
+          - name: stats
+            label: Stats (up to 4 short ones)
+            type: string
+            list: true
+          - name: text
+            label: The fun fact
+            type: text
