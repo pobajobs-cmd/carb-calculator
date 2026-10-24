@@ -1,6 +1,6 @@
 // Pulls journal posts from the repo's /journal folder — same idea as before,
 // but now reading the plain Markdown files that Pages CMS writes (title,
-// date, summary, video in frontmatter; the post text below it) instead of
+// date, summary, video, image in frontmatter; the post text below it) instead of
 // parsing meta tags out of full HTML pages.
 //
 // Nothing here needs updating when you add a post through Pages CMS —
@@ -62,6 +62,7 @@ async function fetchPosts() {
         title: data.title || slug,
         summary: data.summary || '',
         video: data.video || '',
+        image: data.image || '',
         placeholder: data.placeholder === 'true',
       };
     } catch (e) {
@@ -81,6 +82,7 @@ async function fetchPost(slug) {
     title: data.title || slug,
     summary: data.summary || '',
     video: data.video || '',
+    image: data.image || '',
     placeholder: data.placeholder === 'true',
     body,
   };

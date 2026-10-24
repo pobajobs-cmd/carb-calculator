@@ -5,6 +5,7 @@
 
 const SITE_NAME = 'Kylo Loki';
 const CONTACT_EMAIL = 'kylolokikll@gmail.com';
+const YOUTUBE_URL = 'https://www.youtube.com/@kylolokilloyd';
 
 const NAV_LINKS = [
   { href: '/story/',          label: "Kylo's story" },
@@ -52,6 +53,7 @@ const NAV_LINKS = [
           <div class="f-brand">${SITE_NAME}</div>
           <p>A family's journey with Type One Diabetes.</p>
           <p>Get in touch: <a href="mailto:${CONTACT_EMAIL}">${CONTACT_EMAIL}</a></p>
+          <p>Watch on YouTube: <a href="${YOUTUBE_URL}" target="_blank" rel="noopener">@kylolokilloyd</a></p>
           <p class="small">We're a family sharing our own experience, not medical professionals. Always follow the advice of your own diabetes team.</p>
           <p class="small">&copy; ${new Date().getFullYear()} ${SITE_NAME}</p>
         </div>
