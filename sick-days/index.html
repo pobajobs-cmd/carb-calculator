@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sick day rules — Kylo Loki</title>
+<meta name="description" content="What to do when a child with Type 1 diabetes is unwell: the sick day rules our diabetes team gave us, kept short, with a weight-based extra insulin calculator.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;1,9..144,500&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/site.css">
+<style>
+  :root { --green: #1F7A50; --amber: #E0A92B; --red: #B8392F; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --green: #2E9B68; --amber: #E8B43C; --red: #D2564B; } }
+  :root[data-theme="dark"] { --green: #2E9B68; --amber: #E8B43C; --red: #D2564B; }
+
+  .urgent { display: flex; gap: 0.9rem; align-items: flex-start; background: var(--red); color: #fff; border-radius: var(--radius); padding: 1rem 1.2rem; margin: 0 0 1rem; }
+  .urgent strong { display: block; font-size: 1.08rem; }
+  .urgent p { margin: 0; }
+  .urgent .ic { flex: none; width: 34px; height: 34px; border-radius: 50%; background: #fff; color: var(--red); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1.2rem; }
+
+  .rules { list-style: none; padding: 0; margin: 1rem 0 0; display: grid; gap: 0.6rem; counter-reset: r; }
+  .rules li { counter-increment: r; display: grid; grid-template-columns: 2.1rem 1fr; gap: 0.75rem; align-items: start; background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 0.85rem 1rem; }
+  .rules li::before { content: counter(r); width: 2.1rem; height: 2.1rem; border-radius: 50%; background: var(--blue-deep); color: #fff; display: flex; align-items: center; justify-content: center; font-family: var(--font-display); font-size: 1.1rem; }
+  .rules strong { display: block; }
+  .rules span { color: var(--ink-soft); font-size: 0.95rem; }
+
+  .calc { margin: 1.25rem 0 0.5rem; }
+  .calc label { display: block; font-weight: 600; margin-bottom: 0.4rem; }
+  .calc .row { display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; }
+  .calc input { font: inherit; font-size: 1.4rem; font-weight: 600; width: 8.5rem; padding: 0.55rem 0.8rem; border: 2px solid var(--line); border-radius: 12px; background: var(--paper); color: var(--ink); }
+  .calc input:focus { outline: none; border-color: var(--blue); }
+  .calc .unit { font-size: 1.1rem; font-weight: 600; color: var(--ink-soft); }
+  .calc .saved { margin: 0.5rem 0 0; font-size: 0.85rem; color: var(--ink-soft); min-height: 1.2em; }
+  .calc .warn { color: var(--red); font-weight: 600; }
+  .doses { display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem; margin-top: 1rem; }
+  .dose { border-radius: 12px; padding: 0.9rem 1rem; border: 2px solid var(--c); background: var(--paper); }
+  .dose .lbl { font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-soft); }
+  .dose .big { font-family: var(--font-display); font-size: 2.2rem; line-height: 1.1; margin: 0.2rem 0; }
+  .dose .how { font-size: 0.85rem; color: var(--ink-soft); }
+  .fine { font-size: 0.85rem; color: var(--ink-soft); margin: 0.8rem 0 0; }
+
+  .lights { display: grid; gap: 0.9rem; margin: 1.25rem 0 0.5rem; }
+  .light { border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; background: var(--card); }
+  .light header { background: var(--c); color: var(--t, #fff); padding: 0.75rem 1.1rem; display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; flex-wrap: wrap; }
+  .light header h3 { margin: 0; font-family: var(--font-display); font-weight: 500; font-size: 1.25rem; }
+  .light header span { font-weight: 600; font-size: 0.95rem; }
+  .light .body { padding: 0.9rem 1.1rem 1rem; }
+  .light ol { margin: 0; padding-left: 1.3rem; }
+  .light li { margin-bottom: 0.45rem; }
+  .light li:last-child { margin-bottom: 0; }
+  .light .then { margin: 0.8rem 0 0; padding-top: 0.75rem; border-top: 1px dashed var(--line); font-size: 0.95rem; color: var(--ink-soft); }
+  .light .then strong { color: var(--ink); }
+  .d { font-weight: 700; white-space: nowrap; }
+
+  .actions { display: flex; gap: 0.6rem; flex-wrap: wrap; margin-top: 2rem; }
+  .src { font-size: 0.85rem; color: var(--ink-soft); }
+
+  @media (max-width: 560px) { .doses { grid-template-columns: 1fr; } }
+  @media print {
+    .site-nav, .site-footer, .actions, .ticker { display: none !important; }
+    body { background: #fff; font-size: 13px; }
+    .light, .rules li, .dose, .calc { break-inside: avoid; }
+    .urgent, .light header { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="site-nav" id="siteNav"></header>
+
+  <div class="narrow">
+    <header class="page-head">
+      <span class="eyebrow">When Kylo's poorly</span>
+      <h1>Sick day <em>rules</em></h1>
+      <p class="lede">What we do when Kylo is unwell, from the sick day rules our diabetes team gave us. Kept short so it's easy to follow at 3am.</p>
+    </header>
+
+    <div class="urgent" role="alert">
+      <span class="ic" aria-hidden="true">!</span>
+      <p><strong>Being sick with high ketones (over 1.5)? Go to A&amp;E.</strong>Don't wait for the next check.</p>
+    </div>
+
+    <article class="prose">
+      <div class="callout">
+        <p><strong>Always follow your own diabetes team's plan.</strong> These rules are from the leaflet our team gave us, and teams sometimes adjust them for each child. If you're not sure, ring your diabetes team. Ring them early.</p>
+      </div>
+
+      <h2>The golden rules</h2>
+    </article>
+
+    <ol class="rules">
+      <li><div><strong>Never stop the insulin.</strong><span>Even if they're not eating, the body still needs insulin to use glucose and clear ketones.</span></div></li>
+      <li><div><strong>Check blood glucose every 2 hours.</strong><span>Through the night too.</span></div></li>
+      <li><div><strong>Check blood ketones whenever they're ill.</strong><span>Even if glucose looks normal. Then use the traffic lights below.</span></div></li>
+      <li><div><strong>Keep them drinking.</strong><span>Water or sugar-free drinks if glucose is normal or high. Sugary drinks (or carbs) if glucose is low. Avoid fizzy drinks if you can.</span></div></li>
+      <li><div><strong>Tell the diabetes team early.</strong><span>Don't wait until things are bad to ask for advice.</span></div></li>
+    </ol>
+
+    <article class="prose">
+      <h2>Extra insulin calculator</h2>
+      <p>Enter the child's weight and it works out the extra fast-acting insulin for amber and red ketones, rounded to the nearest half unit.</p>
+    </article>
+
+    <section class="card calc" aria-labelledby="calcHead">
+      <label id="calcHead" for="kg">Weight</label>
+      <div class="row">
+        <input id="kg" type="text" inputmode="decimal" autocomplete="off" placeholder="e.g. 14.7" aria-describedby="saved">
+        <span class="unit">kg</span>
+      </div>
+      <p class="saved" id="saved"></p>
+      <div class="doses">
+        <div class="dose" style="--c: var(--amber);">
+          <div class="lbl">Ketones 0.6 to 1.5</div>
+          <div class="big" id="ambDose">&ndash;</div>
+          <div class="how" id="ambHow">0.1 units per kg</div>
+        </div>
+        <div class="dose" style="--c: var(--red);">
+          <div class="lbl">Ketones over 1.5</div>
+          <div class="big" id="redDose">&ndash;</div>
+          <div class="how" id="redHow">0.2 units per kg</div>
+        </div>
+      </div>
+      <p class="fine">Give it with an insulin pen. Rounded to the nearest half unit; if your pen only does whole units, ask your team how to round. Some teams use 10% / 20% of the total daily dose instead, so use whatever is written on your own plan. The weight is remembered on this device only. Update it whenever there's a new weight.</p>
+    </section>
+
+    <article class="prose">
+      <h2>Check ketones, then follow the colour</h2>
+      <p>Blood ketones, measured in mmol/L. Re-check glucose and ketones every 2 hours and move between colours as the numbers change.</p>
+    </article>
+
+    <div class="lights">
+      <section class="light" style="--c: var(--green);">
+        <header><h3>Green</h3><span>Ketones under 0.6</span></header>
+        <div class="body">
+          <ol>
+            <li>If glucose is high, give a <strong>normal correction dose</strong>, plus the usual boluses for food.</li>
+            <li>Re-check glucose and ketones in <strong>2 hours</strong>.</li>
+          </ol>
+          <p class="then"><strong>Glucose coming down?</strong> Good sign; keep watching closely. <strong>Still going up?</strong> Give another correction, <strong>using a pen</strong>.</p>
+        </div>
+      </section>
+
+      <section class="light" style="--c: var(--amber); --t: #1B1408;">
+        <header><h3>Amber</h3><span>Ketones 0.6 to 1.5</span></header>
+        <div class="body">
+          <ol>
+            <li>Give <span class="d js-amb">0.1 units per kg</span> of extra fast-acting insulin, <strong>using a pen</strong>.</li>
+            <li>Keep them drinking.</li>
+            <li>Re-check glucose and ketones in <strong>2 hours</strong>.</li>
+          </ol>
+          <p class="then"><strong>Still amber and glucose rising?</strong> Give it again every 2 hours, keep giving the usual food boluses, and keep checking through the night. <strong>Ketones over 1.5?</strong> Go to red. <strong>Under 0.6?</strong> Go to green.</p>
+        </div>
+      </section>
+
+      <section class="light" style="--c: var(--red);">
+        <header><h3>Red</h3><span>Ketones over 1.5</span></header>
+        <div class="body">
+          <ol>
+            <li>Give <span class="d js-red">0.2 units per kg</span> of extra fast-acting insulin, <strong>using a pen</strong>.</li>
+            <li>Keep them drinking.</li>
+            <li>Re-check glucose and ketones in <strong>2 hours</strong>.</li>
+          </ol>
+          <p class="then"><strong>Still over 1.5?</strong> Give it again every 2 hours, with the usual food boluses. <strong>Dropped to 0.6 to 1.5?</strong> Go to amber. <strong>Being sick with high ketones? Go to A&amp;E.</strong></p>
+        </div>
+      </section>
+    </div>
+
+    <article class="prose">
+      <h2>Ketones but low glucose</h2>
+      <p>These are <strong>starvation ketones</strong>, often from a tummy bug. Give sugary drinks (or carbs if they'll eat) and watch glucose very closely. They may need extra insulin once glucose starts to rise.</p>
+
+      <h2>If you're on a pump</h2>
+      <ul>
+        <li><strong>Check the pump first:</strong> a blocked or kinked tube, a disconnection, or a flat battery.</li>
+        <li><strong>Ketones under 0.6:</strong> give the correction through the pump. If it hasn't worked after <strong>1 hour</strong>, give the correction again with a pen.</li>
+        <li><strong>Ketones 0.6 or more:</strong> give the extra insulin <strong>with a pen</strong>, not the pump.</li>
+        <li><strong>Needing lots of extra doses?</strong> Think about a higher temporary basal rate.</li>
+      </ul>
+
+      <p class="src">Based on <em>Patient Advice for Management of Type 1 Diabetes during illness in children and young people under 18 years (Sick Day Rules)</em>, Association of Children's Diabetes Clinicians and BSPED, version 5, March 2021. We've shortened it; your team's version comes first.</p>
+
+      <div class="callout" style="margin-top:1.5rem;">
+        <p>We're a family sharing what we've learned, not medical professionals. If you're worried, call your diabetes team or NHS 111, or in an emergency call 999.</p>
+      </div>
+    </article>
+
+    <div class="actions">
+      <button class="btn" type="button" onclick="window.print()">Print this page</button>
+      <a class="btn ghost" href="/what-is-t1d/">What is T1D?</a>
+    </div>
+  </div>
+</div>
+<footer class="site-footer" id="siteFooter"></footer>
+<script src="/assets/site.js"></script>
+<script>
+(function () {
+  const KEY = 'kl.sickday.weight';
+  const input = document.getElementById('kg');
+  const saved = document.getElementById('saved');
+  const out = {
+    amb: [document.getElementById('ambDose'), document.getElementById('ambHow'), document.querySelectorAll('.js-amb'), 0.1],
+    red: [document.getElementById('redDose'), document.getElementById('redHow'), document.querySelectorAll('.js-red'), 0.2],
+  };
+  const half = (x) => Math.round(x * 2) / 2;
+  const fmt = (n) => (Number.isInteger(n) ? String(n) : n.toFixed(1));
+  const units = (n) => fmt(n) + (n === 1 ? ' unit' : ' units');
+  const nice = (n) => String(Math.round(n * 100) / 100);
+  const dateTxt = (d) => new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+
+  function clear() {
+    for (const k in out) {
+      const [big, how, inline, per] = out[k];
+      big.textContent = '–';
+      how.textContent = per + ' units per kg';
+      inline.forEach((el) => { el.textContent = per + ' units per kg'; });
+    }
+  }
+
+  function update(store) {
+    const raw = input.value.trim().replace(',', '.');
+    if (!raw) { clear(); saved.textContent = ''; return; }
+    const kg = parseFloat(raw);
+    if (!isFinite(kg) || kg < 3 || kg > 150 || !/^\d+(\.\d*)?$/.test(raw)) {
+      clear();
+      saved.innerHTML = '<span class="warn">Check the weight: enter it in kilograms, e.g. 14.7</span>';
+      return;
+    }
+    for (const k in out) {
+      const [big, how, inline, per] = out[k];
+      const exact = per * kg, dose = half(exact);
+      big.textContent = units(dose);
+      how.textContent = per + ' × ' + nice(kg) + ' kg = ' + nice(exact) + (dose !== exact ? ', rounded to ' + fmt(dose) : '');
+      inline.forEach((el) => { el.textContent = units(dose); });
+    }
+    if (store) {
+      try { localStorage.setItem(KEY, JSON.stringify({ kg: raw, at: Date.now() })); } catch (e) {}
+      saved.textContent = 'Saved on this device.';
+    }
+  }
+
+  try {
+    const s = JSON.parse(localStorage.getItem(KEY) || 'null');
+    if (s && s.kg) {
+      input.value = s.kg;
+      update(false);
+      saved.textContent = 'Weight saved on ' + dateTxt(s.at) + '. Update it whenever there’s a new weight.';
+    }
+  } catch (e) {}
+
+  input.addEventListener('input', () => update(true));
+})();
+</script>
+</body>
+</html>
