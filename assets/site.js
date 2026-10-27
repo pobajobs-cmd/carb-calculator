@@ -10,6 +10,7 @@ const YOUTUBE_URL = 'https://www.youtube.com/@kylolokilloyd';
 const NAV_LINKS = [
   { href: '/story/',          label: "Kylo's story" },
   { href: '/what-is-t1d/',    label: 'What is T1D?' },
+  { href: '/sick-days/',      label: 'Sick days' },
   { href: '/carb-calculator/',label: 'Carb calculator' },
   { href: '/calendar/',       label: 'Calendar' },
   { href: '/podcast/',        label: 'Podcast' },

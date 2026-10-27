@@ -61,7 +61,7 @@ img { max-width: 100%; display: block; }
 }
 .nav-toggle .bars::before { top: 0; } .nav-toggle .bars span { top: 4px; } .nav-toggle .bars::after { bottom: 0; }
 
-@media (max-width: 860px) {
+@media (max-width: 960px) {
   .nav-toggle { display: inline-flex; }
   .nav-links {
     display: none; position: absolute; top: calc(var(--nav-h) - 6px); right: 0; z-index: 40;
